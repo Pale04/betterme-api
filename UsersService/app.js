@@ -1,11 +1,21 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 
+app.use(express.json());
 //TODO: add database connection
+// CHECK :)
 
-app.use(express.json())
+const mongoDBURI = 'mongodb://localhost:27017/betterMeDB';
+mongoose.connect(mongoDBURI, {})
+.then(() => console.log('Conectado a MongoDB'))
+.catch(err => console.error('Error al conectar a MongoDB:', err));
+
 //TODO: import routes
+// CHECK :)
+app.use('/api/users', require('./routes/users'));
 
-app.listen(3000, () => {
-    console.log('UsersService running in http://localhost:3000')
+
+app.listen(6969, () => {
+    console.log('Servidor ejecutándose en http://localhost:6969');
 });
