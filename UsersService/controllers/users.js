@@ -1,6 +1,8 @@
 const { response } = require('express');
 const User = require('../models/users');
 
+//things might chance this is like beta versions of this CRUD 
+
 const getUsers = async (req, res = response) => {
     try {
         const users = await User.find().select('-password');

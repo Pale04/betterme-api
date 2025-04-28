@@ -1,13 +1,5 @@
 const { Schema, model } = require('mongoose');
 
-
-// DISCLAIMER!!!
-
-// k guys so mmm i just made this shi like fast and i think
-// this scheme might change later cause of account and that
-// but i think like this is helpful for eraly versions
-// and like i made it just like on the api spec that we made so cant blame me kekw 
-
 const UserSchema = Schema({
     username: {
         type: String,
