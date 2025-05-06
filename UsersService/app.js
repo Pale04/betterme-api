@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
+
 app.use(express.json());
 //TODO: add database connection
 // CHECK :)
@@ -14,6 +17,7 @@ mongoose.connect(mongoDBURI, {})
 //TODO: import routes
 // CHECK :)
 app.use('/api/users', require('./routes/users'));
+app.use('/api/users/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 
 app.listen(6969, () => {
