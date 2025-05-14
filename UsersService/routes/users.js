@@ -1,6 +1,6 @@
+const express = require('express');
 const swaggerJsdoc = require('swagger-jsdoc'); 
 const swaggerUi = require('swagger-ui-express');
-const express = require('express');
 const router = express.Router();
 const { isAuthenticated } = require('../authentication/middleware');
 const {
@@ -11,7 +11,7 @@ const {
   deleteUser
 } = require('../controllers/users');
 
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 /**
   * @swagger
