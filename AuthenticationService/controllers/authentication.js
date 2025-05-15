@@ -5,9 +5,13 @@ const { generateToken } = require('../middleware/JWTgenerator');
 
 const login = async (req, res = response) => {
   const { username, password } = req.body;
-
+    
   try {
     const account = await Account.findOne({ username });
+
+    if (!account || account.password !== password) {
+        return res.status(401).json({ msg: 'Non matching credentials' });
+    }
 
     const payload = {
       id:        account._id,
