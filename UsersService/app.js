@@ -1,13 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
-
+const cors = require('cors');
 const swaggerUI = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 
 app.use(express.json());
 //TODO: add database connection
 // CHECK :)
+
+app.use(cors({
+  origin: 'https://localhost:5139',  
+  credentials: true                  
+}));
 
 const mongoDBURI = 'mongodb://localhost:27017/betterMeDB';
 mongoose.connect(mongoDBURI, {})

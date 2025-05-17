@@ -32,7 +32,7 @@ const getUser = async (req, res) => {
 
 // POST /api/users 
 const addUser = async (req, res) => {
-  console.log('BODY RECEIVED ➜', req.body);
+  console.log('BODY RECEIVED ', req.body);
 
   const {
     username, password, email, name,
@@ -58,6 +58,7 @@ const addUser = async (req, res) => {
       user: populated,
     });
   } catch (err) {
+    console.error('AddUser error ', err);
     res.status(500).json({ msg: 'Error while creating user', err });
   }
 };
