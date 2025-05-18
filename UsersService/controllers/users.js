@@ -1,78 +1,131 @@
-const { response } = require('express');
-const User = require('../models/users');
+const mongoose = require('mongoose');
+const Account  = require('../models/account');
+const User = require('../models/users')
 
-//things might chance this is like beta versions of this CRUD 
-
-const getUsers = async (req, res = response) => {
-    try {
-        const users = await User.find().select('-password');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ msg: 'Error while obtaining users', error });
-    }
+// GET /api/users
+const getUsers = async (req, res) => {
+  try {
+    const users = await User
+      .find()
+      .populate('account', '-password -__v')
+      .select('-__v');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ msg: 'Error while obtaining users', err });
+  }
 };
 
-const getUser = async (req, res = response) => {
-    const { id } = req.params;
-    try {
-        const usuario = await User.findById(id).select('-password');
-        if (!usuario) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
-        res.json(usuario);
-    } catch (error) {
-        res.status(500).json({ msg: 'Error while obtaining user', error });
-    }
+// GET /api/users/:id
+const getUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User
+      .findOne({ account: id })
+      .populate('account', '-password -__v')
+      .select('-__v');
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: 'Error while obtaining user', err });
+  }
 };
 
-const addUser = async (req, res = response) => {
-    const { username, password, email, usertype, name, birthday } = req.body;
-    try {
-        const newUser = new User({ username, password, email, usertype, name, birthday });
-        await newUser.save();
-        res.status(201).json({
-            msg: `The user ${username} has been created on the DB`,
-            usuario: newUser
-        });
-    } catch (error) {
-        res.status(500).json({ msg: 'Error while creating user', error });
-    }
+// POST /api/users 
+const addUser = async (req, res) => {
+  console.log('BODY RECEIVED ', req.body);
+
+  const {
+    username, password, email, name,
+    birthday, description, phone, website,
+  } = req.body;
+
+  try {
+    const account = await Account.create({
+      username, password, email, name
+    });
+
+    const profile = await User.create({
+      account: account._id,
+      birthday,
+      description,
+      phone,
+      website
+    });
+
+    const populated = await profile.populate('account', '-password -__v');
+    res.status(201).json({
+      msg: `Account ${username} created`,
+      user: populated,
+    });
+  } catch (err) {
+    console.error('AddUser error ', err);
+    res.status(500).json({ msg: 'Error while creating user', err });
+  }
 };
 
-const updateUser = async (req, res = response) => {
-    const { id } = req.params;
-    try {
-        const userUpdated = await User.findByIdAndUpdate(
-            id,
-            req.body,
-            { new: true }
-        );
-        if (!userUpdated) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
-        res.json({
-            msg: `The user with ID ${id} has been updated`,
-            usuario: userUpdated
-        });
-    } catch (error) {
-        res.status(500).json({ msg: 'Error while updating user', error });
+// PUT /api/users/:id
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const {
+    username, email, name, active, userType,
+    birthday, description, phone, website,
+  } = req.body;
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const account = await Account.findByIdAndUpdate(
+      id,
+      { username, email, name, active, userType },
+      { new: true, session },
+    );
+    if (!account) {
+      await session.abortTransaction();
+      return res.status(404).json({ msg: 'Account not found' });
     }
+
+    const profile = await User.findOneAndUpdate(
+      { account: id },
+      { birthday, description, phone, website },
+      { new: true, session },
+    );
+
+    await session.commitTransaction();
+
+    const populated = await profile.populate('account', '-password -__v');
+    res.json({
+      msg: `User ${id} updated`,
+      user: populated,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({ msg: 'Error while updating user', err });
+  } finally {
+    session.endSession();
+  }
 };
 
-const deleteUser = async (req, res = response) => {
-    const { id } = req.params;
-    try {
-        const deletedUser = await User.findByIdAndDelete(id);
-        if (!deletedUser) {
-            return res.status(404).json({ msg: 'User not found' });
-        }
-        res.json({
-            msg: `The user with ID ${id} has been deleted`,
-            usuario: deletedUser
-        });
-    } catch (error) {
-        res.status(500).json({ msg: 'Error while deleting user', error });
+// DELETE /api/users/:id
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const profile = await User.findOneAndDelete({ account: id }, { session });
+    const account = await Account.findByIdAndDelete(id, { session });
+    if (!profile || !account) {
+      await session.abortTransaction();
+      return res.status(404).json({ msg: 'User not found' });
     }
+
+    await session.commitTransaction();
+    res.json({ msg: `User ${id} deleted` });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({ msg: 'Error while deleting user', err });
+  } finally {
+    session.endSession();
+  }
 };
 
 module.exports = {getUsers,getUser,addUser,updateUser,deleteUser};
