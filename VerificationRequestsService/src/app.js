@@ -1,4 +1,4 @@
-const envFile = (process.env.NODE_ENV !== 'test') ? '../.env' : '../.env.test';
+const envFile = (process.env.NODE_ENV !== 'test') ? '../.env' : '../.env.test.local';
 
 require('dotenv').config({
    path: require('path').resolve(__dirname, envFile)
