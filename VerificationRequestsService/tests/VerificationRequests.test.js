@@ -13,6 +13,10 @@ const rebootDataBase = async () => {
     await VerificationRequest.deleteMany();
 }
 
+const closeDataBaseConnection = async () => {
+    await mongoose.connection.close()
+}
+
 const getToken = async (tokenType) => {
     await axios.post(process.env.AUTHENTICATION_SERVICE_URL, {
         username: (tokenType === 'Member') ? 'pale member' : 'pale',
@@ -42,7 +46,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await closeDataBaseConnection();
     fs.rm(path.join(__dirname, './uploads'), {recursive: true}, fileRemovalErrorHandler = (error) => {
         if (error) {
             console.error(error);
@@ -255,6 +259,104 @@ describe('GET /betterme/verification-requests/uploads/:fileName', () => {
 });
 
 describe('PATCH /betterme/verification-requests/:id', () => {
+    
+    test("Evaluate a verification request successfully", async () => {
+        const postRes = await request(app)
+            .post("/betterme/verification-requests")
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .set('Content-Type', 'multipart/form-data')
+            .attach("certificate", path.join(__dirname, 'test_documents/test_certificate.png'))
+            .attach("identification", path.join(__dirname, "test_documents/test_identification.png"));
+        
+        const res = await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer ${testModeratorToken}`)
+            .send({ approved: true });
 
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('msg');
+    });
 
+    test("Evaluate a verification request without required body", async () => {
+        const postRes = await request(app)
+            .post("/betterme/verification-requests")
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .set('Content-Type', 'multipart/form-data')
+            .attach("certificate", path.join(__dirname, 'test_documents/test_certificate.png'))
+            .attach("identification", path.join(__dirname, "test_documents/test_identification.png"));
+        
+        const res = await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer ${testModeratorToken}`)
+            .send({})
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('msg');
+    });
+
+    test("Evaluate a verification request with non existent id", async () => {
+        const res = await request(app)
+            .patch(`/betterme/verification-requests/a82d6a567baaaa2127a37742`)
+            .set('Authorization', `Bearer ${testModeratorToken}`)
+            .send({ approved: true });
+        
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toHaveProperty('msg');
+    });
+
+    test("Evaluate a verification request that is already evaluated", async () => {
+        const postRes = await request(app)
+            .post("/betterme/verification-requests")
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .set('Content-Type', 'multipart/form-data')
+            .attach("certificate", path.join(__dirname, 'test_documents/test_certificate.png'))
+            .attach("identification", path.join(__dirname, "/test_documents/test_identification.png"));
+
+        await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer ${testModeratorToken}`)
+            .send({ approved: true});
+
+        const secondResPatch = await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer ${testModeratorToken}`)
+            .send({ approved: true});
+        
+        expect(secondResPatch.statusCode).toBe(409);
+        expect(secondResPatch.body).toHaveProperty('msg');
+    });
+
+    test("Evaluate a verification request with invalid token", async () => {
+        const postRes = await request(app)
+            .post("/betterme/verification-requests")
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .set('Content-Type', 'multipart/form-data')
+            .attach("certificate", path.join(__dirname, 'test_documents/test_certificate.png'))
+            .attach("identification", path.join(__dirname, "/test_documents/test_identification.png"));
+
+        const res = await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer invalidToken`)
+            .send({ approved: true});
+        
+        expect(res.statusCode).toBe(401);
+        expect(res.body).toHaveProperty('msg');
+    });
+
+    test("Evaluate a verification request with invalid role", async () => {
+        const postRes = await request(app)
+            .post("/betterme/verification-requests")
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .set('Content-Type', 'multipart/form-data')
+            .attach("certificate", path.join(__dirname, 'test_documents/test_certificate.png'))
+            .attach("identification", path.join(__dirname, "/test_documents/test_identification.png"));
+
+        const res = await request(app)
+            .patch(`/betterme/verification-requests/${postRes.body.verificationRequest.id}`)
+            .set('Authorization', `Bearer ${testMemberToken}`)
+            .send({ approved: true });
+        
+        expect(res.statusCode).toBe(403);
+        expect(res.body).toHaveProperty('msg');
+    });
 });

@@ -12,8 +12,8 @@ const app = express();
 app.use(express.json());   
 
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('Conectado a MongoDB'))
-.catch(err => console.err('Error al conectar a MongoDB',err));
+.then(() => console.log('Established MongoDB connection'))
+.catch(err => console.err('Error while attempting to connect to MongoDB', err));
 
 app.use("/betterme/verification-requests/test-coverage", express.static("../coverage/lcov-report"))
 app.use('/betterme/verification-requests-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

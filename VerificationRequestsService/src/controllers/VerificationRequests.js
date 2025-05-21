@@ -93,15 +93,9 @@ const addVerificationRequest = async (req, res = response) => {
 };
 
 const evaluateVerificationRequest = async (req, res = response) => {
-   const verificationRequestId = req.params.id;
    const requestApproved = req.body.approved;
 
-   if (!verificationRequestId) {
-      return res.status(400).json({
-         msg: 'The user id parameter is required'
-      });
-   }
-   else if (requestApproved === null) {
+   if (requestApproved == null) {
       return res.status(400).json({
          msg: 'The approved field is required'
       });
@@ -109,7 +103,7 @@ const evaluateVerificationRequest = async (req, res = response) => {
 
    let updatedVerificationRequest;
    try {
-      updatedVerificationRequest = await VerificationRequest.findById(verificationRequestId);
+      updatedVerificationRequest = await VerificationRequest.findById(req.params.id);
    } catch (error) {
       console.error(error);
       return res.status(500).json({
@@ -117,15 +111,21 @@ const evaluateVerificationRequest = async (req, res = response) => {
       });
    }
 
+   if (!updatedVerificationRequest) {
+      return res.status(404).json({
+         msg: 'Verification request not found'
+      });
+   }
+
    if (updatedVerificationRequest.status !== 'Pending') {
       return res.status(409).json({
-         error: 'The verification request is already evaluated'
+         msg: 'The verification request is already evaluated'
       })
    }
 
    const newStatus = requestApproved ? 'Approved' : 'Denied';
    try {
-      await VerificationRequest.findByIdAndUpdate(verificationRequestId, { status: newStatus });
+      await VerificationRequest.findByIdAndUpdate(updatedVerificationRequest.id, { status: newStatus });
    }
    catch (error) {
       console.error(error);
@@ -135,8 +135,10 @@ const evaluateVerificationRequest = async (req, res = response) => {
    }
 
    //TODO: comunicarle al servicio de Users que actualice el campo de verified a true
-   const certificatePath = path.join(__dirname, "../", updatedVerificationRequest.certificateUrl);
-   const identificationPath = path.join(__dirname, "../", updatedVerificationRequest.identificationUrl);
+   //Utilizar RabitMQ
+
+   const certificatePath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.certificateUrl);
+   const identificationPath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.identificationUrl);
    const fileRemovalErrorHandler = (error) => {
       if (error) {
         console.error(error);
