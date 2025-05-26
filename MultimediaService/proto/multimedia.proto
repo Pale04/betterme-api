@@ -1,0 +1,30 @@
+syntax = "proto3";
+option go_package = "./proto";
+package MultimediaService;
+
+service MultimediaService {
+  rpc GetPostMultimedia(PostInfo) returns (stream FileChunk);
+  rpc GetUserProfileImage(UserInfo) returns (stream FileChunk);
+  rpc CreatePost(Post) returns (Post);
+  rpc UploadPostMultimedia(stream FileChunk) returns (PostInfo);
+}
+
+message PostInfo {
+  string id = 1;
+}
+
+message UserInfo {
+  string id = 1;
+}
+
+message FileChunk {
+  bytes chunk = 1;
+  string postId = 2;
+}
+
+message Post {
+  string title = 1;
+  string description = 2;
+  string category = 3;
+  repeated string tags = 4;
+}
