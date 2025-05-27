@@ -26,5 +26,5 @@ message Post {
   string title = 1;
   string description = 2;
   string category = 3;
-  repeated string tags = 4;
+  string userId = 4;
 }

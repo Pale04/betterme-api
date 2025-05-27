@@ -166,7 +166,7 @@ type Post struct {
 	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Category      string                 `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
-	Tags          []string               `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
+	UserId        string                 `protobuf:"bytes,4,opt,name=userId,proto3" json:"userId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -222,11 +222,11 @@ func (x *Post) GetCategory() string {
 	return ""
 }
 
-func (x *Post) GetTags() []string {
+func (x *Post) GetUserId() string {
 	if x != nil {
-		return x.Tags
+		return x.UserId
 	}
-	return nil
+	return ""
 }
 
 var File_proto_multimedia_proto protoreflect.FileDescriptor
@@ -240,12 +240,12 @@ const file_proto_multimedia_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"9\n" +
 	"\tFileChunk\x12\x14\n" +
 	"\x05chunk\x18\x01 \x01(\fR\x05chunk\x12\x16\n" +
-	"\x06postId\x18\x02 \x01(\tR\x06postId\"n\n" +
+	"\x06postId\x18\x02 \x01(\tR\x06postId\"r\n" +
 	"\x04Post\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1a\n" +
-	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags2\xce\x02\n" +
+	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x16\n" +
+	"\x06userId\x18\x04 \x01(\tR\x06userId2\xce\x02\n" +
 	"\x11MultimediaService\x12P\n" +
 	"\x11GetPostMultimedia\x12\x1b.MultimediaService.PostInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12R\n" +
 	"\x13GetUserProfileImage\x12\x1b.MultimediaService.UserInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12>\n" +
