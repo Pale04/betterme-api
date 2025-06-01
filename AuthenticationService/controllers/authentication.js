@@ -17,7 +17,7 @@ const login = async (req, res = response) => {
       id:        account._id,
       username:  account.username,
       email:     account.email,
-      userType:  account.userType
+      role:  account.userType
     };
     const token = generateToken(payload);   
     res.json({ accessToken: token });
