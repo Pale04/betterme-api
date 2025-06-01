@@ -1,0 +1,209 @@
+using MongoDB.Driver;
+using Service.DataAccess;
+using Service.DTO;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("All",
+        builder => builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var config = builder.Configuration;
+    var connectionString = config["MongoConnection"];
+    if (connectionString == null)
+    {
+        Console.WriteLine("You must set your mongo connection in appsettings.Development.json.");
+        Environment.Exit(0);
+    }
+    ;
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase("betterMeDB");
+});
+
+builder.Services.AddScoped<IReportsDB, ReportsDB>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        string keyFile = "";
+        try
+        {
+            keyFile = File.ReadAllText("./App_Data/public.key");
+        }
+        catch (DirectoryNotFoundException error)
+        {
+            Console.WriteLine($"No se encontró la llave pública: {error.Message}");
+            Environment.Exit(0);
+        }
+        var rsa = RSA.Create();
+        rsa.ImportFromPem(keyFile.ToCharArray());
+        var key = new RsaSecurityKey(rsa);
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            //ValidIssuer = config["JWTSettings:Issuer"],
+            //ValidAudience = config["JWTSettings:Audience"],
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+        };
+    });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("OnlyMember", policy => policy.RequireRole("Member"))
+    .AddPolicy("OnlyModerator", policy => policy.RequireRole("Moderator"));
+
+var app = builder.Build();
+
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseCors("All");
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+{
+    if (string.IsNullOrWhiteSpace(report.PostId) || string.IsNullOrWhiteSpace(report.Reason))
+    {
+        return Results.BadRequest("The post id and reason fields are required");
+    }
+
+    ReportDTO addedReport;
+    try
+    {
+        addedReport = await dbService.AddReport(new ReportDTO { PostId = report.PostId, Reason = report.Reason });
+    }
+    catch (Exception error)
+    {
+        logger.LogError("Error while attempting to register the report: {error}", error);
+        return Results.Problem(detail: "A server error ocurred while attempting to create the report", statusCode: 500);
+    }
+    
+    //TODO: cambiar estado de la publicación a "Reportado"
+    return Results.Created("/reports/" + addedReport.Id, addedReport);
+    
+})
+.WithName("Add a new report")
+.WithOpenApi()
+.RequireAuthorization("OnlyMember");
+
+
+app.MapGet("/reports/{id}", async (string id, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+{
+    ReportDTO? result;
+
+    try
+    {
+        result = await dbService.GetReport(id);
+    }
+    catch (Exception error)
+    {
+        logger.LogError("Error while attempting to get a report: {error}", error);
+        return Results.Problem(detail: "A server error ocurred while attempting to get the report", statusCode: 500);
+    }
+
+    return result == null ? Results.NotFound() : Results.Ok(result);
+})
+.WithName("Get a report by id")
+.WithOpenApi()
+.RequireAuthorization("OnlyModerator");
+
+
+app.MapGet("/reports", async ([FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+{
+    ReportDTO? result;
+
+    try
+    {
+        result = await dbService.GetReport(null);
+    }
+    catch (Exception error)
+    {
+        logger.LogError("Error while attempting to get a report: {error}", error);
+        return Results.Problem(detail: "A server error ocurred while attempting to get the report", statusCode: 500);
+    }
+
+    return result == null ? Results.NotFound() : Results.Ok(result);
+})
+.WithName("Get the oldest report")
+.WithOpenApi()
+.RequireAuthorization("OnlyModerator");
+
+
+app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evaluatedReport, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+{
+    if (evaluatedReport.Ok == null)
+    {
+        return Results.BadRequest("The Ok field is requiered");
+    }
+
+    if ((bool)evaluatedReport.Ok)
+    {
+        //TODO: cambiar el estado de la publicación a published
+    }
+    else
+    {
+        //TODO: cambiar el estado de la publicación a Deleted
+    }
+
+    bool result;
+    
+    try
+    {
+        result = await dbService.UpdateReportState(id);
+    }
+    catch (Exception error)
+    {
+        logger.LogError("Error while attempting to update the report state: {error}", error);
+        return Results.Problem(detail: "Error while attempting to update the report state", statusCode: 500);
+    }
+
+    return result ? Results.Ok("Report state update successful") : Results.NotFound("The report cannot be found");
+})
+.WithName("Evaluate a report")
+.WithOpenApi()
+.RequireAuthorization("OnlyModerator");;
+
+app.Run();
+
+record Report(string PostId, string Reason);
+record EvaluatedReport(bool? Ok);
+
+public partial class Program
+{ }
