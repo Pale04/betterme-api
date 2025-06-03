@@ -1,16 +1,12 @@
 let envFile;
 switch (process.env.NODE_ENV) {
-   case 'test':
-      console.log('Test enviroment');
-      envFile = '../.env.test';
-      break;
    case 'production':
       console.log('Production enviroment');
-      envFile = '../.env.prod';
+      envFile = '../.env.production';
       break;
    default:
       console.log('Development enviroment');
-      envFile = '../.env.dev';
+      envFile = '../.env.development';
       break;
 }
 
