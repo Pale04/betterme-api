@@ -112,7 +112,7 @@ func (x *UserInfo) GetId() string {
 type FileChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Chunk         []byte                 `protobuf:"bytes,1,opt,name=chunk,proto3" json:"chunk,omitempty"`
-	PostId        string                 `protobuf:"bytes,2,opt,name=postId,proto3" json:"postId,omitempty"`
+	ResourceId    string                 `protobuf:"bytes,2,opt,name=resourceId,proto3" json:"resourceId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -154,19 +154,20 @@ func (x *FileChunk) GetChunk() []byte {
 	return nil
 }
 
-func (x *FileChunk) GetPostId() string {
+func (x *FileChunk) GetResourceId() string {
 	if x != nil {
-		return x.PostId
+		return x.ResourceId
 	}
 	return ""
 }
 
 type Post struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Category      string                 `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
-	UserId        string                 `protobuf:"bytes,4,opt,name=userId,proto3" json:"userId,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Category      string                 `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
+	UserId        string                 `protobuf:"bytes,5,opt,name=userId,proto3" json:"userId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -199,6 +200,13 @@ func (x *Post) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Post.ProtoReflect.Descriptor instead.
 func (*Post) Descriptor() ([]byte, []int) {
 	return file_proto_multimedia_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Post) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 func (x *Post) GetTitle() string {
@@ -237,15 +245,18 @@ const file_proto_multimedia_proto_rawDesc = "" +
 	"\bPostInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1a\n" +
 	"\bUserInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"9\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"A\n" +
 	"\tFileChunk\x12\x14\n" +
-	"\x05chunk\x18\x01 \x01(\fR\x05chunk\x12\x16\n" +
-	"\x06postId\x18\x02 \x01(\tR\x06postId\"r\n" +
-	"\x04Post\x12\x14\n" +
-	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1a\n" +
-	"\bcategory\x18\x03 \x01(\tR\bcategory\x12\x16\n" +
-	"\x06userId\x18\x04 \x01(\tR\x06userId2\xce\x02\n" +
+	"\x05chunk\x18\x01 \x01(\fR\x05chunk\x12\x1e\n" +
+	"\n" +
+	"resourceId\x18\x02 \x01(\tR\n" +
+	"resourceId\"\x82\x01\n" +
+	"\x04Post\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
+	"\bcategory\x18\x04 \x01(\tR\bcategory\x12\x16\n" +
+	"\x06userId\x18\x05 \x01(\tR\x06userId2\xce\x02\n" +
 	"\x11MultimediaService\x12P\n" +
 	"\x11GetPostMultimedia\x12\x1b.MultimediaService.PostInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12R\n" +
 	"\x13GetUserProfileImage\x12\x1b.MultimediaService.UserInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12>\n" +
