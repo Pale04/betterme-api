@@ -1,0 +1,68 @@
+services:
+  authentication_service:
+    image: betterme_auth_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+    ports:
+      - "6968:6968"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.1
+
+  users_service:
+    image: betterme_users_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+    ports:
+      - "6969:6969"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.2
+
+  verification_requests_service:
+    image: betterme_verifications_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+    ports:
+      - "6970:6970"
+    volumes:
+      - verification_documents:/app/src/uploads
+    networks:
+      internal:
+        ipv4_address: 172.16.0.3
+
+  #email_service
+
+  reports_service:
+    image: betterme_reports_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+    ports:
+      - "6972:6972"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.5
+
+  mongodb_service:
+    image: mongo
+    restart: always
+    volumes:
+      - mongodb:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.8
+
+volumes:  
+    mongodb:
+    verification_documents:
+
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+          gateway: 172.16.0.254

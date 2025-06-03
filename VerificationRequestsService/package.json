@@ -8,7 +8,8 @@
   "main": "src/app.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --coverage --runInBand",
-    "start": "cd src && nodemon app"
+    "deploy": "cd src && cross-env NODE_ENV=production node app",
+    "start": "cd src && cross-env NODE_ENV=development nodemon app"
   },
   "jest": {
     "testMatch": [
@@ -16,6 +17,7 @@
     ]
   },
   "dependencies": {
+    "cross-env": "^7.0.3",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -26,7 +28,6 @@
   },
   "devDependencies": {
     "axios": "^1.9.0",
-    "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "supertest": "^7.1.1"
   }
