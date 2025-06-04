@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "deploy": "cd src && cross-env NODE_ENV=production node app",
+    "start": "cd src && cross-env NODE_ENV=development nodemon app"
   },
   "jest": {
     "testEnvironment": "node",
@@ -16,6 +18,7 @@
   "dependencies": {
     "axios": "^1.9.0",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mongoose": "^8.15.0",

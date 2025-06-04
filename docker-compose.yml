@@ -34,7 +34,18 @@ services:
       internal:
         ipv4_address: 172.16.0.3
 
-  #email_service
+  email_service:
+    image: betterme_email_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+      users_service:
+        condition: service_started
+    ports:
+      - "6971:6971"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.4
 
   reports_service:
     image: betterme_reports_service:1.0
