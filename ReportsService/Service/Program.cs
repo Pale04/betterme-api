@@ -5,12 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -27,12 +24,13 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var config = builder.Configuration;
     var connectionString = config["MongoConnection"];
+    Console.WriteLine(connectionString);
     if (connectionString == null)
     {
-        Console.WriteLine("You must set your mongo connection in appsettings.Development.json.");
+        Console.WriteLine("You must set your mongo connection in appsettings.json.");
         Environment.Exit(0);
     }
-    ;
+    
     return new MongoClient(connectionString);
 });
 
@@ -83,8 +81,6 @@ builder.Services.AddAuthorizationBuilder()
 
 var app = builder.Build();
 
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

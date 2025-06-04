@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "cd src && cross-env NODE_ENV=production node app",
+    "start": "cd src && cross-env NODE_ENV=development nodemon app"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +13,7 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
