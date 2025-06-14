@@ -128,12 +128,17 @@ app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReports
     {
         logger.LogError(error.Message);
     }
-    
+
     return Results.Created("/reports/" + addedReport.Id, addedReport);
-    
+
 })
-.WithName("Add a new report")
-.WithOpenApi()
+.WithSummary("Add a new report")
+.Produces(201)
+.Produces(400)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyMember");
 
 
@@ -153,8 +158,12 @@ app.MapGet("/reports/{id}", async (string id, [FromServices] IReportsDB dbServic
 
     return result == null ? Results.NotFound() : Results.Ok(result);
 })
-.WithName("Get a report by id")
-.WithOpenApi()
+.WithSummary("Get a specific report by Id")
+.Produces(200)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");
 
 
@@ -174,8 +183,12 @@ app.MapGet("/reports", async ([FromServices] IReportsDB dbService, [FromServices
 
     return result == null ? Results.NotFound() : Results.Ok(result);
 })
-.WithName("Get the oldest report")
-.WithOpenApi()
+.WithSummary("Get the oldest non-evaluated report")
+.Produces(200)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");
 
 
@@ -184,6 +197,17 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
     if (evaluatedReport.Ok == null)
     {
         return Results.BadRequest("The Ok field is requiered");
+    }
+
+    bool result;
+    try
+    {
+        result = await dbService.UpdateReportState(id);
+    }
+    catch (Exception error)
+    {
+        logger.LogError("Error while attempting to update the report state: {error}", error);
+        return Results.Problem(detail: "Error while attempting to update the report state", statusCode: 500);
     }
 
     if ((bool)evaluatedReport.Ok)
@@ -217,22 +241,15 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
         }
     }
 
-    bool result;
-    
-    try
-    {
-        result = await dbService.UpdateReportState(id);
-    }
-    catch (Exception error)
-    {
-        logger.LogError("Error while attempting to update the report state: {error}", error);
-        return Results.Problem(detail: "Error while attempting to update the report state", statusCode: 500);
-    }
-
     return result ? Results.Ok("Report state update successful") : Results.NotFound("The report cannot be found");
 })
-.WithName("Evaluate a report")
-.WithOpenApi()
+.WithSummary("Update the report state")
+.Produces(200)
+.Produces(400)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");;
 
 app.Run();

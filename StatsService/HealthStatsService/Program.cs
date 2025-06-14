@@ -6,6 +6,9 @@ using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.Configure<MongoSettings>(
     builder.Configuration.GetSection("MongoSettings")
 );
@@ -23,6 +26,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseCors("AllowAllOrigins");
 
@@ -50,7 +59,11 @@ app.MapPost("/healthstats", async (
     {
         return Results.Problem(detail: mex.Message, statusCode: 500);
     }
-});
+})
+.WithSummary("Add the user health stats partially or totally, for a specific day")
+.Produces(201)
+.Produces(404)
+.Produces(500);
 
 //GET /healthstats/{userId}
 app.MapGet("/healthstats/{userId}", async (
@@ -80,7 +93,11 @@ app.MapGet("/healthstats/{userId}", async (
     {
         return Results.Problem(detail: mex.Message, statusCode: 500);
     }
-});
+})
+.WithSummary("Obtain a list of the last four months registered health stats by a user")
+.Produces(200)
+.Produces(404)
+.Produces(500);
 
 
 app.Run();
