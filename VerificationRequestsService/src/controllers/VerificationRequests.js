@@ -137,6 +137,7 @@ const evaluateVerificationRequest = async (req, res = response) => {
    //TODO: comunicarle al servicio de Users que actualice el campo de verified a true
    //Utilizar RabitMQ
 
+
    const certificatePath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.certificateUrl);
    const identificationPath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.identificationUrl);
    const fileRemovalErrorHandler = (error) => {
@@ -152,11 +153,8 @@ const evaluateVerificationRequest = async (req, res = response) => {
    });
 };
 
-const accountIsVerified = async (req, res = response) => {
-   //TODO
+const updateUserVerification = () => {
+   
 };
-
-//TODO: probablemente se necesite un endpoint para obtener el header de un get, antes de intentar evaluar 
-//una solicitud que ya fue evaluada
 
 module.exports = { getVerificationRequests, getVerificationRequestDocument, addVerificationRequest, evaluateVerificationRequest };

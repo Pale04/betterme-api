@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,12 @@ builder.Services.AddScoped(sp =>
 });
 
 builder.Services.AddScoped<IReportsDB, ReportsDB>();
+builder.Services.AddScoped<PostService>();
+
+builder.Services.AddHttpClient("PostsAPI", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["PostsUrl"]);
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -65,8 +72,6 @@ builder.Services.AddAuthentication(options =>
         var key = new RsaSecurityKey(rsa);
         options.TokenValidationParameters = new TokenValidationParameters()
         {
-            //ValidIssuer = config["JWTSettings:Issuer"],
-            //ValidAudience = config["JWTSettings:Audience"],
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
@@ -93,7 +98,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger, [FromServices] PostService postService) =>
 {
     if (string.IsNullOrWhiteSpace(report.PostId) || string.IsNullOrWhiteSpace(report.Reason))
     {
@@ -110,13 +115,30 @@ app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReports
         logger.LogError("Error while attempting to register the report: {error}", error);
         return Results.Problem(detail: "A server error ocurred while attempting to create the report", statusCode: 500);
     }
-    
-    //TODO: cambiar estado de la publicación a "Reportado"
+
+    try
+    {
+        await postService.UpdatePostState(report.PostId, PostState.Reported);
+    }
+    catch (HttpRequestException error)
+    {
+        logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+    }
+    catch (Exception error)
+    {
+        logger.LogError(error.Message);
+    }
+
     return Results.Created("/reports/" + addedReport.Id, addedReport);
-    
+
 })
-.WithName("Add a new report")
-.WithOpenApi()
+.WithSummary("Add a new report")
+.Produces(201)
+.Produces(400)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyMember");
 
 
@@ -136,8 +158,12 @@ app.MapGet("/reports/{id}", async (string id, [FromServices] IReportsDB dbServic
 
     return result == null ? Results.NotFound() : Results.Ok(result);
 })
-.WithName("Get a report by id")
-.WithOpenApi()
+.WithSummary("Get a specific report by Id")
+.Produces(200)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");
 
 
@@ -157,29 +183,23 @@ app.MapGet("/reports", async ([FromServices] IReportsDB dbService, [FromServices
 
     return result == null ? Results.NotFound() : Results.Ok(result);
 })
-.WithName("Get the oldest report")
-.WithOpenApi()
+.WithSummary("Get the oldest non-evaluated report")
+.Produces(200)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");
 
 
-app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evaluatedReport, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evaluatedReport, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger, [FromServices] PostService postService) =>
 {
     if (evaluatedReport.Ok == null)
     {
         return Results.BadRequest("The Ok field is requiered");
     }
 
-    if ((bool)evaluatedReport.Ok)
-    {
-        //TODO: cambiar el estado de la publicación a published
-    }
-    else
-    {
-        //TODO: cambiar el estado de la publicación a Deleted
-    }
-
     bool result;
-    
     try
     {
         result = await dbService.UpdateReportState(id);
@@ -190,10 +210,46 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
         return Results.Problem(detail: "Error while attempting to update the report state", statusCode: 500);
     }
 
+    if ((bool)evaluatedReport.Ok)
+    {
+        try
+        {
+            await postService.UpdatePostState(id, PostState.Published);
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+        }
+        catch (Exception error)
+        {
+            logger.LogError(error.Message);
+        }
+    }
+    else
+    {
+        try
+        {
+            await postService.UpdatePostState(id, PostState.Deleted);
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+        }
+        catch (Exception error)
+        {
+            logger.LogError(error.Message);
+        }
+    }
+
     return result ? Results.Ok("Report state update successful") : Results.NotFound("The report cannot be found");
 })
-.WithName("Evaluate a report")
-.WithOpenApi()
+.WithSummary("Update the report state")
+.Produces(200)
+.Produces(400)
+.Produces(401)
+.Produces(403)
+.Produces(404)
+.Produces(500)
 .RequireAuthorization("OnlyModerator");;
 
 app.Run();
