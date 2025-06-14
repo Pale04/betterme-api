@@ -2,23 +2,25 @@ package models
 
 import (
 	pb "MultimediaService/proto"
-	ts "google.golang.org/protobuf/types/known/timestamppb"
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	ts "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Post struct {
-	Id          string
-	Title       string
-	Description string
-	Category    string
-	UserId      string
-	TimeStamp   time.Time
-	Status      string
+	ID          bson.ObjectID `bson:"_id,omitempty"`
+	Title       string        `bson:"title"`
+	Description string        `bson:"description"`
+	Category    string        `bson:"category"`
+	UserId      string        `bson:"userId"`
+	TimeStamp   time.Time     `bson:"timeStamp"`
+	Status      string        `bson:"status"`
 }
 
 func (p *Post) ToProto() pb.Post {
 	return pb.Post{
-		Id:          p.Id,
+		Id:          p.ID.Hex(),
 		Title:       p.Title,
 		Description: p.Description,
 		Category:    p.Category,
@@ -29,8 +31,10 @@ func (p *Post) ToProto() pb.Post {
 }
 
 func (Post) FromProto(p *pb.Post, id string) Post {
+	objId, _ := bson.ObjectIDFromHex(p.Id)
+
 	return Post{
-		Id:          p.Id,
+		ID:          objId,
 		Title:       p.Title,
 		Description: p.Description,
 		Category:    p.Category,
@@ -41,10 +45,10 @@ func (Post) FromProto(p *pb.Post, id string) Post {
 }
 
 func (p *Post) IsValid() bool {
-	return p.Title != "" ||
-		p.Description != "" ||
-		p.Category != "" ||
-		p.UserId != "" ||
-		p.TimeStamp.Before(time.Now()) ||
+	return p.Title != "" &&
+		p.Description != "" &&
+		p.Category != "" &&
+		p.UserId != "" &&
+		p.TimeStamp.Before(time.Now()) &&
 		p.Status != ""
 }

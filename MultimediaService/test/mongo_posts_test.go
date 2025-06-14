@@ -1,17 +1,17 @@
 package test
 
 import (
-	logger "MultimediaService/loggingService"
 	da "MultimediaService/service/dataAccess"
 	"MultimediaService/service/models"
+	"MultimediaService/test/helpers"
+
 	"os"
 	"testing"
 	"time"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
-
-var postId string
 
 func TestMain(m *testing.M) {
 	setup()
@@ -21,30 +21,11 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
-	cleanDB()
-
-	post := models.Post{
-		Title:       "maleficios del yoga",
-		Description: "lorem ipsum dolor sit amet",
-		Category:    "Workout",
-		UserId:      "aieubd123",
-		TimeStamp:   time.Now(),
-		Status:      "Published",
-	}
-
-	result, err := da.WritePost(post)
-
-	if err != nil {
-		logger.ErrorString("Error while testing. See next entry")
-		logger.Error(err)
-		return
-	}
-
-	post.Id = result.Id
+	helpers.CleanDB()
 }
 
 func shutdown() {
-	cleanDB()
+	helpers.CleanDB()
 }
 
 func TestCreatePost(t *testing.T) {
@@ -65,7 +46,7 @@ func TestCreatePost(t *testing.T) {
 
 	if result.Title != "beneficios del yoga" ||
 		result.Description != "lorem ipsum dolor sit amet" ||
-		result.Id == "" {
+		result.ID.Hex() == "" {
 		t.Errorf("Saved wrong post info: %s", result.Title)
 	}
 }
@@ -84,6 +65,7 @@ func TestCreateInvalidPost(t *testing.T) {
 
 	if err == nil {
 		t.Errorf("Expected invalid post error")
+		return
 	}
 
 	if err.Error() != "Tried to save an invalid post" {
@@ -92,21 +74,41 @@ func TestCreateInvalidPost(t *testing.T) {
 }
 
 func TestGetPost(t *testing.T) {
-	post, err := da.GetPost(postId)
+	post := models.Post{
+		Title:       "maleficios del yoga",
+		Description: "lorem ipsum dolor sit amet",
+		Category:    "Workout",
+		UserId:      "aieubd123",
+		TimeStamp:   time.Now(),
+		Status:      "Published",
+	}
+
+	result, err := da.WritePost(post)
+
+	if err != nil {
+		t.Errorf("Couldn't save post to mongodb, error ocurred: %s", err.Error())
+		return
+	}
+
+	postId := result.ID
+	t.Logf("Post id added: %s", postId.Hex())
+
+	post, err = da.GetPost(postId)
 
 	if err != nil {
 		t.Errorf("Couldn't retrieve post info from mongodb, error ocurred: %s", err.Error())
 	}
 
-	if post.Id != postId {
-		t.Errorf("Retrieved wrong post, post retrieved: %s", post.Id)
+	if post.ID != postId {
+		t.Errorf("Retrieved wrong post, post retrieved: %s", post.ID)
 	}
 }
 
 func TestGetNonExistentPost(t *testing.T) {
-	_, err := da.GetPost("aaaaaaaa")
+	id, _ := bson.ObjectIDFromHex("684df2b209e9f1915427b7aa")
+	_, err := da.GetPost(id)
 
 	if err != mongo.ErrNoDocuments {
-		t.Errorf("Expected document not found error")
+		t.Errorf("Expected document not found error, error found: %s", err.Error())
 	}
 }

@@ -5,8 +5,10 @@ import (
 	m "MultimediaService/service/models"
 	"context"
 	"fmt"
+	"log"
+	"os"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -15,11 +17,17 @@ import (
 var (
 	database     = "betterMe"
 	dbCollection = "post"
-	dbHost       = ""
 )
 
-func GetPost(id string) (m.Post, error) {
-	client, err := mongo.Connect(options.Client().ApplyURI("mongodb://localhost:27017"))
+func GetPost(id bson.ObjectID) (m.Post, error) {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+		return m.Post{}, err
+	}
+
+	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("DATABASE_NAME")))
 
 	if err != nil {
 		logger.Error(err)
@@ -35,7 +43,8 @@ func GetPost(id string) (m.Post, error) {
 	coll := client.Database(database).Collection(dbCollection)
 
 	var post m.Post
-	err = coll.FindOne(context.TODO(), bson.E{Key: "_id", Value: id}).Decode(&post)
+
+	err = coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&post)
 
 	if err == mongo.ErrNoDocuments {
 		return m.Post{}, err
@@ -55,7 +64,14 @@ func WritePost(post m.Post) (m.Post, error) {
 		return m.Post{}, fmt.Errorf("Tried to save an invalid post")
 	}
 
-	client, err := mongo.Connect(options.Client().ApplyURI("mongodb://localhost:27017"))
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+		return m.Post{}, err
+	}
+
+	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("DATABASE_NAME")))
 
 	if err != nil {
 		logger.Error(err)
@@ -76,7 +92,7 @@ func WritePost(post m.Post) (m.Post, error) {
 		return m.Post{}, err
 	}
 
-	post.Id = result.InsertedID.(primitive.ObjectID).Hex()
+	post.ID = result.InsertedID.(bson.ObjectID)
 
 	return post, nil
 }
