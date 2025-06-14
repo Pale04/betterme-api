@@ -4,13 +4,14 @@ import (
 	logger "MultimediaService/loggingService"
 	pb "MultimediaService/proto"
 	da "MultimediaService/service/dataAccess"
-	"bufio"
+	"MultimediaService/service/models"
+	"bytes"
 	"context"
 	"io"
 )
 
 func streamMultimedia(file da.FileData, id string, stream pb.MultimediaService_GetPostMultimediaServer) error {
-	reader := bufio.NewReader(&file.Contents)
+	reader := bytes.NewReader(file.Contents)
 	buffer := make([]byte, 1024)
 
 	for {
@@ -19,6 +20,7 @@ func streamMultimedia(file da.FileData, id string, stream pb.MultimediaService_G
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			logger.Error(err)
 			return err
@@ -61,9 +63,90 @@ func (s *server) GetUserProfileImage(user *pb.UserInfo, stream pb.MultimediaServ
 }
 
 func (s *server) CreatePost(ctx context.Context, post *pb.Post) (*pb.Post, error) {
-	return &pb.Post{}, nil
+	postAdded, err := da.WritePost(models.Post{})
+
+	if err != nil {
+		logger.Error(err)
+		return &pb.Post{}, err
+	}
+
+	newPost := postAdded.ToProto()
+
+	return &newPost, nil
 }
 
 func (s *server) UploadPostMultimedia(stream pb.MultimediaService_UploadPostMultimediaServer) error {
-	return nil
+	var buffer bytes.Buffer
+	var resourceId string
+	var ext string
+
+	for {
+		chunk, err := stream.Recv()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+
+		ext = chunk.GetExt()
+		resourceId = chunk.GetResourceId()
+		_, err = buffer.Write(chunk.GetChunk())
+
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	}
+
+	da.WriteFile(da.FileData{
+		Contents: []byte{},
+		Name:     "post" + resourceId + ext,
+		Source:   da.Post,
+	})
+
+	return stream.SendAndClose(&pb.PostInfo{
+		Id: resourceId,
+	})
+}
+
+func (s *server) UploadProfileImage(stream pb.MultimediaService_UploadProfileImageServer) error {
+	var buffer bytes.Buffer
+	var resourceId string
+	var ext string
+
+	for {
+		chunk, err := stream.Recv()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+
+		ext = chunk.GetExt()
+		resourceId = chunk.GetResourceId()
+		_, err = buffer.Write(chunk.GetChunk())
+
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+	}
+
+	da.WriteFile(da.FileData{
+		Contents: []byte{},
+		Name:     "post" + resourceId + ext,
+		Source:   da.User,
+	})
+
+	return stream.SendAndClose(&pb.UserInfo{
+		Id: resourceId,
+	})
 }

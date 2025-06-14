@@ -23,6 +23,7 @@ const (
 	MultimediaService_GetUserProfileImage_FullMethodName  = "/MultimediaService.MultimediaService/GetUserProfileImage"
 	MultimediaService_CreatePost_FullMethodName           = "/MultimediaService.MultimediaService/CreatePost"
 	MultimediaService_UploadPostMultimedia_FullMethodName = "/MultimediaService.MultimediaService/UploadPostMultimedia"
+	MultimediaService_UploadProfileImage_FullMethodName   = "/MultimediaService.MultimediaService/UploadProfileImage"
 )
 
 // MultimediaServiceClient is the client API for MultimediaService service.
@@ -33,6 +34,7 @@ type MultimediaServiceClient interface {
 	GetUserProfileImage(ctx context.Context, in *UserInfo, opts ...grpc.CallOption) (grpc.ServerStreamingClient[FileChunk], error)
 	CreatePost(ctx context.Context, in *Post, opts ...grpc.CallOption) (*Post, error)
 	UploadPostMultimedia(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileChunk, PostInfo], error)
+	UploadProfileImage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileChunk, UserInfo], error)
 }
 
 type multimediaServiceClient struct {
@@ -104,6 +106,19 @@ func (c *multimediaServiceClient) UploadPostMultimedia(ctx context.Context, opts
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type MultimediaService_UploadPostMultimediaClient = grpc.ClientStreamingClient[FileChunk, PostInfo]
 
+func (c *multimediaServiceClient) UploadProfileImage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[FileChunk, UserInfo], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &MultimediaService_ServiceDesc.Streams[3], MultimediaService_UploadProfileImage_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[FileChunk, UserInfo]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type MultimediaService_UploadProfileImageClient = grpc.ClientStreamingClient[FileChunk, UserInfo]
+
 // MultimediaServiceServer is the server API for MultimediaService service.
 // All implementations must embed UnimplementedMultimediaServiceServer
 // for forward compatibility.
@@ -112,6 +127,7 @@ type MultimediaServiceServer interface {
 	GetUserProfileImage(*UserInfo, grpc.ServerStreamingServer[FileChunk]) error
 	CreatePost(context.Context, *Post) (*Post, error)
 	UploadPostMultimedia(grpc.ClientStreamingServer[FileChunk, PostInfo]) error
+	UploadProfileImage(grpc.ClientStreamingServer[FileChunk, UserInfo]) error
 	mustEmbedUnimplementedMultimediaServiceServer()
 }
 
@@ -133,6 +149,9 @@ func (UnimplementedMultimediaServiceServer) CreatePost(context.Context, *Post) (
 }
 func (UnimplementedMultimediaServiceServer) UploadPostMultimedia(grpc.ClientStreamingServer[FileChunk, PostInfo]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadPostMultimedia not implemented")
+}
+func (UnimplementedMultimediaServiceServer) UploadProfileImage(grpc.ClientStreamingServer[FileChunk, UserInfo]) error {
+	return status.Errorf(codes.Unimplemented, "method UploadProfileImage not implemented")
 }
 func (UnimplementedMultimediaServiceServer) mustEmbedUnimplementedMultimediaServiceServer() {}
 func (UnimplementedMultimediaServiceServer) testEmbeddedByValue()                           {}
@@ -202,6 +221,13 @@ func _MultimediaService_UploadPostMultimedia_Handler(srv interface{}, stream grp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type MultimediaService_UploadPostMultimediaServer = grpc.ClientStreamingServer[FileChunk, PostInfo]
 
+func _MultimediaService_UploadProfileImage_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MultimediaServiceServer).UploadProfileImage(&grpc.GenericServerStream[FileChunk, UserInfo]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type MultimediaService_UploadProfileImageServer = grpc.ClientStreamingServer[FileChunk, UserInfo]
+
 // MultimediaService_ServiceDesc is the grpc.ServiceDesc for MultimediaService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +254,11 @@ var MultimediaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UploadPostMultimedia",
 			Handler:       _MultimediaService_UploadPostMultimedia_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "UploadProfileImage",
+			Handler:       _MultimediaService_UploadProfileImage_Handler,
 			ClientStreams: true,
 		},
 	},

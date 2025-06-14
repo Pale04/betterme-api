@@ -2,6 +2,7 @@ package dataAccess
 
 import (
 	"MultimediaService/loggingService"
+	"bytes"
 	"errors"
 	"fmt"
 	"image"
@@ -21,7 +22,7 @@ const (
 )
 
 type FileData struct {
-	Contents os.File
+	Contents []byte
 	Name     string
 	Source   ImageSource
 }
@@ -43,7 +44,10 @@ func getImage(fileName string, fileSource ImageSource) (FileData, error) {
 		return FileData{}, err
 	}
 
-	return FileData{*file, fileName, fileSource}, nil
+	var buffer []byte
+	file.Read(buffer)
+
+	return FileData{buffer, fileName, fileSource}, nil
 }
 
 func getVideo(fileName string) (FileData, error) {
@@ -80,7 +84,10 @@ func WriteFile(file FileData) error {
 		pathExt = "posts/"
 	}
 
-	img, _, err := image.Decode(&file.Contents)
+	var buffer bytes.Buffer
+	buffer.Write(file.Contents)
+	img, _, err := image.Decode(&buffer)
+
 	if err != nil {
 		logger.Error(err)
 		return err

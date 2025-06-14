@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -113,6 +114,7 @@ type FileChunk struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Chunk         []byte                 `protobuf:"bytes,1,opt,name=chunk,proto3" json:"chunk,omitempty"`
 	ResourceId    string                 `protobuf:"bytes,2,opt,name=resourceId,proto3" json:"resourceId,omitempty"`
+	Ext           string                 `protobuf:"bytes,3,opt,name=ext,proto3" json:"ext,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -161,6 +163,13 @@ func (x *FileChunk) GetResourceId() string {
 	return ""
 }
 
+func (x *FileChunk) GetExt() string {
+	if x != nil {
+		return x.Ext
+	}
+	return ""
+}
+
 type Post struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -168,6 +177,8 @@ type Post struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Category      string                 `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
 	UserId        string                 `protobuf:"bytes,5,opt,name=userId,proto3" json:"userId,omitempty"`
+	TimeStamp     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=timeStamp,proto3" json:"timeStamp,omitempty"`
+	Status        string                 `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -237,32 +248,50 @@ func (x *Post) GetUserId() string {
 	return ""
 }
 
+func (x *Post) GetTimeStamp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.TimeStamp
+	}
+	return nil
+}
+
+func (x *Post) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 var File_proto_multimedia_proto protoreflect.FileDescriptor
 
 const file_proto_multimedia_proto_rawDesc = "" +
 	"\n" +
-	"\x16proto/multimedia.proto\x12\x11MultimediaService\"\x1a\n" +
+	"\x16proto/multimedia.proto\x12\x11MultimediaService\x1a\x1fgoogle/protobuf/timestamp.proto\"\x1a\n" +
 	"\bPostInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1a\n" +
 	"\bUserInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"A\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"S\n" +
 	"\tFileChunk\x12\x14\n" +
 	"\x05chunk\x18\x01 \x01(\fR\x05chunk\x12\x1e\n" +
 	"\n" +
 	"resourceId\x18\x02 \x01(\tR\n" +
-	"resourceId\"\x82\x01\n" +
+	"resourceId\x12\x10\n" +
+	"\x03ext\x18\x03 \x01(\tR\x03ext\"\xd4\x01\n" +
 	"\x04Post\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
 	"\bcategory\x18\x04 \x01(\tR\bcategory\x12\x16\n" +
-	"\x06userId\x18\x05 \x01(\tR\x06userId2\xce\x02\n" +
+	"\x06userId\x18\x05 \x01(\tR\x06userId\x128\n" +
+	"\ttimeStamp\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\ttimeStamp\x12\x16\n" +
+	"\x06status\x18\a \x01(\tR\x06status2\xa1\x03\n" +
 	"\x11MultimediaService\x12P\n" +
 	"\x11GetPostMultimedia\x12\x1b.MultimediaService.PostInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12R\n" +
 	"\x13GetUserProfileImage\x12\x1b.MultimediaService.UserInfo\x1a\x1c.MultimediaService.FileChunk0\x01\x12>\n" +
 	"\n" +
 	"CreatePost\x12\x17.MultimediaService.Post\x1a\x17.MultimediaService.Post\x12S\n" +
-	"\x14UploadPostMultimedia\x12\x1c.MultimediaService.FileChunk\x1a\x1b.MultimediaService.PostInfo(\x01B\tZ\a./protob\x06proto3"
+	"\x14UploadPostMultimedia\x12\x1c.MultimediaService.FileChunk\x1a\x1b.MultimediaService.PostInfo(\x01\x12Q\n" +
+	"\x12UploadProfileImage\x12\x1c.MultimediaService.FileChunk\x1a\x1b.MultimediaService.UserInfo(\x01B\tZ\a./protob\x06proto3"
 
 var (
 	file_proto_multimedia_proto_rawDescOnce sync.Once
@@ -278,25 +307,29 @@ func file_proto_multimedia_proto_rawDescGZIP() []byte {
 
 var file_proto_multimedia_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_proto_multimedia_proto_goTypes = []any{
-	(*PostInfo)(nil),  // 0: MultimediaService.PostInfo
-	(*UserInfo)(nil),  // 1: MultimediaService.UserInfo
-	(*FileChunk)(nil), // 2: MultimediaService.FileChunk
-	(*Post)(nil),      // 3: MultimediaService.Post
+	(*PostInfo)(nil),              // 0: MultimediaService.PostInfo
+	(*UserInfo)(nil),              // 1: MultimediaService.UserInfo
+	(*FileChunk)(nil),             // 2: MultimediaService.FileChunk
+	(*Post)(nil),                  // 3: MultimediaService.Post
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
 }
 var file_proto_multimedia_proto_depIdxs = []int32{
-	0, // 0: MultimediaService.MultimediaService.GetPostMultimedia:input_type -> MultimediaService.PostInfo
-	1, // 1: MultimediaService.MultimediaService.GetUserProfileImage:input_type -> MultimediaService.UserInfo
-	3, // 2: MultimediaService.MultimediaService.CreatePost:input_type -> MultimediaService.Post
-	2, // 3: MultimediaService.MultimediaService.UploadPostMultimedia:input_type -> MultimediaService.FileChunk
-	2, // 4: MultimediaService.MultimediaService.GetPostMultimedia:output_type -> MultimediaService.FileChunk
-	2, // 5: MultimediaService.MultimediaService.GetUserProfileImage:output_type -> MultimediaService.FileChunk
-	3, // 6: MultimediaService.MultimediaService.CreatePost:output_type -> MultimediaService.Post
-	0, // 7: MultimediaService.MultimediaService.UploadPostMultimedia:output_type -> MultimediaService.PostInfo
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: MultimediaService.Post.timeStamp:type_name -> google.protobuf.Timestamp
+	0, // 1: MultimediaService.MultimediaService.GetPostMultimedia:input_type -> MultimediaService.PostInfo
+	1, // 2: MultimediaService.MultimediaService.GetUserProfileImage:input_type -> MultimediaService.UserInfo
+	3, // 3: MultimediaService.MultimediaService.CreatePost:input_type -> MultimediaService.Post
+	2, // 4: MultimediaService.MultimediaService.UploadPostMultimedia:input_type -> MultimediaService.FileChunk
+	2, // 5: MultimediaService.MultimediaService.UploadProfileImage:input_type -> MultimediaService.FileChunk
+	2, // 6: MultimediaService.MultimediaService.GetPostMultimedia:output_type -> MultimediaService.FileChunk
+	2, // 7: MultimediaService.MultimediaService.GetUserProfileImage:output_type -> MultimediaService.FileChunk
+	3, // 8: MultimediaService.MultimediaService.CreatePost:output_type -> MultimediaService.Post
+	0, // 9: MultimediaService.MultimediaService.UploadPostMultimedia:output_type -> MultimediaService.PostInfo
+	1, // 10: MultimediaService.MultimediaService.UploadProfileImage:output_type -> MultimediaService.UserInfo
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_proto_multimedia_proto_init() }
