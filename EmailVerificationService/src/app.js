@@ -1,23 +1,22 @@
 let envFile;
 switch (process.env.NODE_ENV) {
-   case 'production':
-      console.log('Production enviroment');
-      envFile = '../.env.production';
-      break;
-   default:
-      console.log('Development enviroment');
-      envFile = '../.env.development';
-      break;
+  case 'production':
+    console.log('Production environment');
+    envFile = '../.env.production';
+    break;
+  default:
+    console.log('Development environment');
+    envFile = '../.env.development';
 }
 
 require('dotenv').config({
   path: require('path').resolve(__dirname, envFile)
 });
 
-const express   = require('express');
-const mongoose  = require('mongoose');
-const cors      = require('cors');
-const verifyRt  = require('./routes/verify');
+const express  = require('express');
+const mongoose = require('mongoose');
+const cors     = require('cors');
+const verifyRt = require('./routes/verify');
 
 const app = express();
 app.use(express.json());
@@ -31,10 +30,12 @@ if (process.env.NODE_ENV !== 'test') {
 
 app.use('/api/verify', verifyRt);
 
-module.exports = app;                   
+// export for testing
+module.exports = app;
 
-if (require.main === module) {           
-  const PORT = process.env.PORT;
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
   app.listen(PORT, () =>
-    console.log(`EmailVerifyService running on http://localhost:${PORT}/api/verify`));
+    console.log(`EmailVerifyService running on http://localhost:${PORT}/api/verify`)
+  );
 }
