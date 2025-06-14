@@ -84,19 +84,17 @@ app.MapGet("/posts/{id}", async ([FromServices] MongoDbContext dbContext,string 
 });
 
 //PATCH /posts/{id}/status
-app.MapPatch("/posts/{id}/status", async ([FromServices] MongoDbContext dbContext, string id,[FromBody] JsonElement body) =>
+app.MapPatch("/posts/{id}/status", async ([FromServices] MongoDbContext dbContext, string id, [FromBody] NewPostState body) =>
 {
     if (string.IsNullOrWhiteSpace(id))
         return Results.BadRequest(new { msg = "id is required" });
 
-    if (!body.TryGetProperty("status", out var statusProp))
+    if (string.IsNullOrWhiteSpace(body.State))
     {
         return Results.BadRequest(new { msg = "Missing 'status' in request body" });
     }
 
-    var statusString = statusProp.GetString();
-    if (string.IsNullOrWhiteSpace(statusString)
-        || !Enum.TryParse<Status>(statusString, ignoreCase: true, out var newStatus))
+    if (!Enum.TryParse<Status>(body.State, ignoreCase: true, out var newStatus))
     {
         return Results.BadRequest(new { msg = "Invalid status value" });
     }
@@ -139,5 +137,7 @@ app.MapDelete("/posts/{id}", async (
 app.MapGet("/", () => Results.Ok(new { msg = "PostsService is running" }));
 
 app.Run();
+
+record NewPostState(string State);
 
 public partial class Program { }

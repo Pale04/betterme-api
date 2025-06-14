@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,12 @@ builder.Services.AddScoped(sp =>
 });
 
 builder.Services.AddScoped<IReportsDB, ReportsDB>();
+builder.Services.AddScoped<PostService>();
+
+builder.Services.AddHttpClient("PostsAPI", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["PostsUrl"]);
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -65,8 +72,6 @@ builder.Services.AddAuthentication(options =>
         var key = new RsaSecurityKey(rsa);
         options.TokenValidationParameters = new TokenValidationParameters()
         {
-            //ValidIssuer = config["JWTSettings:Issuer"],
-            //ValidAudience = config["JWTSettings:Audience"],
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
@@ -93,7 +98,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger, [FromServices] PostService postService) =>
 {
     if (string.IsNullOrWhiteSpace(report.PostId) || string.IsNullOrWhiteSpace(report.Reason))
     {
@@ -110,8 +115,20 @@ app.MapPost("/reports", async ([FromBody] Report report, [FromServices] IReports
         logger.LogError("Error while attempting to register the report: {error}", error);
         return Results.Problem(detail: "A server error ocurred while attempting to create the report", statusCode: 500);
     }
+
+    try
+    {
+        await postService.UpdatePostState(report.PostId, PostState.Reported);
+    }
+    catch (HttpRequestException error)
+    {
+        logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+    }
+    catch (Exception error)
+    {
+        logger.LogError(error.Message);
+    }
     
-    //TODO: cambiar estado de la publicación a "Reportado"
     return Results.Created("/reports/" + addedReport.Id, addedReport);
     
 })
@@ -162,7 +179,7 @@ app.MapGet("/reports", async ([FromServices] IReportsDB dbService, [FromServices
 .RequireAuthorization("OnlyModerator");
 
 
-app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evaluatedReport, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger) =>
+app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evaluatedReport, [FromServices] IReportsDB dbService, [FromServices] ILogger<Program> logger, [FromServices] PostService postService) =>
 {
     if (evaluatedReport.Ok == null)
     {
@@ -171,11 +188,33 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
 
     if ((bool)evaluatedReport.Ok)
     {
-        //TODO: cambiar el estado de la publicación a published
+        try
+        {
+            await postService.UpdatePostState(id, PostState.Published);
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+        }
+        catch (Exception error)
+        {
+            logger.LogError(error.Message);
+        }
     }
     else
     {
-        //TODO: cambiar el estado de la publicación a Deleted
+        try
+        {
+            await postService.UpdatePostState(id, PostState.Deleted);
+        }
+        catch (HttpRequestException error)
+        {
+            logger.LogError("Error while attempting to send request to PostService for state update: {error}", error);
+        }
+        catch (Exception error)
+        {
+            logger.LogError(error.Message);
+        }
     }
 
     bool result;

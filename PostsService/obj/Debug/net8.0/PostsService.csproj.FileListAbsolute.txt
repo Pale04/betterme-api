@@ -1,8 +1,0 @@
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.csproj.AssemblyReference.cache
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.GeneratedMSBuildEditorConfig.editorconfig
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.AssemblyInfoInputs.cache
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.AssemblyInfo.cs
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.csproj.CoreCompileInputs.cache
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.MvcApplicationPartsAssemblyInfo.cs
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.MvcApplicationPartsAssemblyInfo.cache
-D:\AppsApis\betterme-api\PostsService\obj\Debug\net8.0\PostsService.sourcelink.json
