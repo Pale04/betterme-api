@@ -74,6 +74,16 @@ func WriteFile(file FileData) error {
 			logger.Error(err)
 			return err
 		}
+
+		if os.Mkdir(path+"users/", 0777) != nil {
+			logger.Error(err)
+			return err
+		}
+
+		if os.Mkdir(path+"posts/", 0777) != nil {
+			logger.Error(err)
+			return err
+		}
 	}
 
 	var pathExt string

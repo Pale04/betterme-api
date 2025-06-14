@@ -16,7 +16,7 @@ type Post struct {
 	Status      string
 }
 
-func (p Post) ToProto() pb.Post {
+func (p *Post) ToProto() pb.Post {
 	return pb.Post{
 		Id:          p.Id,
 		Title:       p.Title,
@@ -38,4 +38,13 @@ func (Post) FromProto(p *pb.Post, id string) Post {
 		TimeStamp:   p.TimeStamp.AsTime(),
 		Status:      p.Status,
 	}
+}
+
+func (p *Post) IsValid() bool {
+	return p.Title != "" ||
+		p.Description != "" ||
+		p.Category != "" ||
+		p.UserId != "" ||
+		p.TimeStamp.Before(time.Now()) ||
+		p.Status != ""
 }
