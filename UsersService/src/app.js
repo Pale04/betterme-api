@@ -33,9 +33,20 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
 app.use('/api/users', require('./routes/users'));
-app.use('/api/users/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+app.use('/api/docs/', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
-const port = process.env.PORT;
-app.listen(port, () => {
-    console.log(`Servidor ejecutándose en http://localhost:${6969}/api/users`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  const { verifyToken } = require('./middleware/verifyToken');
+  app.use('/api/users', verifyToken, require('./routes/users'));
+} else {
+  app.use('/api/users', require('./routes/users'));
+}
+
+module.exports = app;
+
+if (require.main === module) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () =>
+    console.log(`UsersService running on http://localhost:${port}`)
+  );
+}
