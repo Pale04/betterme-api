@@ -45,6 +45,7 @@ const getVerificationRequestDocument = async (req, res = response) => {
    const filePath = path.resolve(__dirname, '../', process.env.UPLOADS_FOLDER, fileName);
    return res.sendFile(filePath, error => {
       if (error) {
+         console.log(filePath);
          return res.status(404).json({
             msg: 'Document not found'
          });
@@ -69,9 +70,16 @@ const addVerificationRequest = async (req, res = response) => {
       });
    }
 
+   if (!req.files || !req.files['certificate'] || !req.files['identification']) {
+      return res.status(400).json({
+         msg: 'The certificate and identification are required'
+      });
+   }
+
+   const email = req.user.email;
    const certificateUrl = req.files['certificate'][0].path;
    const identificationUrl = req.files['identification'][0].path;
-   const email = req.user.email;
+
    let newVerificationRequest = new VerificationRequest({userId, email, certificateUrl, identificationUrl})
 
    try {
