@@ -1,13 +1,16 @@
 let envFile;
 switch (process.env.NODE_ENV) {
-   case 'production':
-      console.log('Production enviroment');
-      envFile = '../.env.production';
-      break;
-   default:
-      console.log('Development enviroment');
-      envFile = '../.env.development';
-      break;
+  case 'production':
+    console.log('Production enviroment');
+    envFile = '../.env.production';
+    break;
+  case 'test':
+    console.log('Test enviroment');
+    envFile = '../.env.test.local'
+  default:
+    console.log('Development enviroment');
+    envFile = '../.env.development';
+    break;
 }
 
 require('dotenv').config({
@@ -33,7 +36,12 @@ app.use(cors({
 app.use('/api/authentication', require('./routes/authentication'));
 app.use('/api/authentication/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
-const port = process.env.PORT;
-app.listen(port, () => {
-    console.log(`Servidor ejecutándose en http://localhost:${port}/api/authentication`);
-});
+module.exports = app;
+
+if (require.main === module) {
+  const port = process.env.PORT;
+  app.listen(port, () => {
+      console.log(`Servidor ejecutándose en http://localhost:${port}/api/authentication`);
+  });
+}
+

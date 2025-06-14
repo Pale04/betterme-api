@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cross-env NODE_ENV=test jest --coverage --runInBand",
     "deploy": "cd src && cross-env NODE_ENV=production node app",
     "start": "cd src && cross-env NODE_ENV=development nodemon app"
+  },
+  "jest": {
+    "testMatch": [
+      "**/tests/*.test.js"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -21,5 +26,9 @@
     "nodemon": "^3.1.10",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "supertest": "^7.1.1"
   }
 }

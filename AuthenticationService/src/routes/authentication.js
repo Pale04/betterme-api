@@ -1,12 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const swaggerUI = require('swagger-ui-express');
-const { isAuthenticated } = require('../middleware/middleware');
-const{
-    login
-} = require('../controllers/authentication.js');
 
-// router.use(isAuthenticated);    
+const{login} = require('../controllers/authentication.js');
 
 /**
   * @swagger
