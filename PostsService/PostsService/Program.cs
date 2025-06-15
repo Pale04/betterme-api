@@ -60,7 +60,7 @@ app.MapGet("/posts", async ([FromServices] MongoDbContext dbContext, [FromQuery]
 })
 .WithSummary("Get a list of the newest posts by category")
 .Produces(200)
-.Produces(500);
+.Produces(400);
 
 //GET /posts/user/{userId}
 app.MapGet("/posts/user/{userId}", async ([FromServices] MongoDbContext dbContext, string userId) =>
@@ -81,8 +81,7 @@ app.MapGet("/posts/user/{userId}", async ([FromServices] MongoDbContext dbContex
     return Results.Ok(posts);
 })
 .WithSummary("Get the posts list of a specific user by id")
-.Produces(200)
-.Produces(400);
+.Produces(200);
 
 
 //GET /posts/{id}
@@ -100,7 +99,6 @@ app.MapGet("/posts/{id}", async ([FromServices] MongoDbContext dbContext, string
 })
 .WithSummary("Get a specific post by id")
 .Produces(200)
-.Produces(400)
 .Produces(404);
 
 //PATCH /posts/{id}/status
@@ -135,10 +133,7 @@ app.MapPatch("/posts/{id}/status", async ([FromServices] MongoDbContext dbContex
 .Produces(404);
 
 //DELETE /posts/{id}
-app.MapDelete("/posts/{id}", async (
-    [FromServices] MongoDbContext dbContext,
-    string id
-) =>
+app.MapDelete("/posts/{id}", async ([FromServices] MongoDbContext dbContext, string id) =>
 {
     if (string.IsNullOrWhiteSpace(id))
         return Results.BadRequest(new { msg = "id is required" });
@@ -158,7 +153,6 @@ app.MapDelete("/posts/{id}", async (
 })
 .WithSummary("Delete a post by id")
 .Produces(200)
-.Produces(400)
 .Produces(404);
 
 app.Run();
