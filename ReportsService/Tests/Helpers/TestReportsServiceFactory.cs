@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication;

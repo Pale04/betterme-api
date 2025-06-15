@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Tests.Helpers;
-using Xunit;
 using Microsoft.AspNetCore.Authentication;
 using Service.DTO;
 
@@ -14,7 +13,6 @@ public class ReportsServiceTests : IClassFixture<TestWebApplicationFactory<Progr
     private readonly TestWebApplicationFactory<Program> _factory;
     private readonly HttpClient _memberAuthClient;
     private readonly HttpClient _moderatorAuthClient;
-    private readonly HttpClient _failingAuthClient;
 
     public ReportsServiceTests(TestWebApplicationFactory<Program> factory)
     {
@@ -33,14 +31,6 @@ public class ReportsServiceTests : IClassFixture<TestWebApplicationFactory<Progr
             {
                 services.AddAuthentication(defaultScheme: "TestModeratorScheme")
                     .AddScheme<AuthenticationSchemeOptions, TestModeratorAuthHandler>("TestModeratorScheme", options => { });
-            });
-        }).CreateClient();
-        _failingAuthClient = _factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                services.AddAuthentication(defaultScheme: "TestFailingScheme")
-                    .AddScheme<AuthenticationSchemeOptions, TestModeratorAuthHandler>("TestFailingScheme", options => { });
             });
         }).CreateClient();
     }
