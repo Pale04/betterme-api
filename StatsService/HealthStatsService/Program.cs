@@ -36,10 +36,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAllOrigins");
 
 //POST /healthstats
-app.MapPost("/healthstats", async (
-    [FromServices] MongoDbContext dbContext,
-    HealthStat incomingStat
-) =>
+app.MapPost("/healthstats", async ([FromServices] MongoDbContext dbContext, HealthStat incomingStat) =>
 {
     if (string.IsNullOrWhiteSpace(incomingStat.UserId))
     {
@@ -66,10 +63,7 @@ app.MapPost("/healthstats", async (
 .Produces(500);
 
 //GET /healthstats/{userId}
-app.MapGet("/healthstats/{userId}", async (
-    [FromServices] MongoDbContext dbContext,
-    string userId
-) =>
+app.MapGet("/healthstats/{userId}", async ([FromServices] MongoDbContext dbContext, string userId) =>
 {
     if (string.IsNullOrWhiteSpace(userId))
     {
@@ -80,9 +74,7 @@ app.MapGet("/healthstats/{userId}", async (
 
     try
     {
-        var filter = Builders<HealthStat>.Filter.Where(
-            stat => stat.UserId == userId && stat.Date >= fourMonthsAgo
-        );
+        var filter = Builders<HealthStat>.Filter.Where(stat => stat.UserId == userId && stat.Date >= fourMonthsAgo);
         var stats = await dbContext.HealthStatsCollection
                                    .Find(filter)
                                    .SortByDescending(stat => stat.Date)
@@ -101,3 +93,6 @@ app.MapGet("/healthstats/{userId}", async (
 
 
 app.Run();
+
+public partial class Program
+{ }
