@@ -128,4 +128,41 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = {getUsers,getUser,addUser,updateUser,deleteUser};
+// PATCH /api/users/:id/password
+const changePassword = async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const account = await Account.findOne({ account: id })
+
+    if (!account || account.password !== currentPassword) {
+        return res.status(401).json({ msg: 'Non matching credentials' });
+    }
+
+    await Account.findByIdAndUpdate(
+      id,
+      { newPassword },
+    );
+
+    if (!account) {
+      await session.abortTransaction();
+      return res.status(404).json({ msg: 'Account not found' });
+    }
+
+    await session.commitTransaction();
+
+    res.json({
+      msg: `User ${id} updated`,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({ msg: 'Error while updating user', err });
+  } finally {
+    session.endSession();
+  }
+}
+
+module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword};

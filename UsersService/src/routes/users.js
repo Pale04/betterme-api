@@ -8,7 +8,8 @@ const {
   getUser,
   addUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  changePassword
 } = require('../controllers/users');
 
 /**
@@ -331,5 +332,52 @@ router.put('/:id', updateUser);
  */
 
 router.delete('/:id', deleteUser);
+
+/**
+ * @swagger
+ * /api/users/{id}/password:
+ *   patch:
+ *     summary: Change the password of an account
+ *     security:
+ *       - BearerAuth: []
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               newPassword:
+  *                 type: string
+  *                 example: Abc1234*o
+  *               currentPassword:
+  *                 type: string
+  *                 example: aBc12340+b
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId of the account
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "User 60a7b2... updated"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.patch('/:id/password', [isAuthenticated], changePassword);
 
 module.exports = router;
