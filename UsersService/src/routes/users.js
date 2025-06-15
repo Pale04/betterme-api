@@ -1,6 +1,4 @@
 const express = require('express');
-const swaggerJsdoc = require('swagger-jsdoc'); 
-const swaggerUi = require('swagger-ui-express');
 const router = express.Router();
 const { isAuthenticated } = require('../authentication/middleware');
 const {
@@ -11,7 +9,8 @@ const {
   deleteUser,
   changePassword,
   changeEmail,
-  addModeratorUser
+  addModeratorUser,
+  updateUserVerification
 } = require('../controllers/users');
 
 /**
@@ -123,7 +122,6 @@ const {
  *                 type: string
  *                 example: "Error while processing request"
  */
-
 // router.use(isAuthenticated);
 
 /**
@@ -177,8 +175,6 @@ router.get('/', getUsers);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-
-
 router.get('/:id', getUser);
 
 /**
@@ -235,8 +231,8 @@ router.get('/:id', getUser);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-
 router.post('/', addUser);
+
 /**
  * @swagger
  * /api/users/{id}:
@@ -299,7 +295,6 @@ router.post('/', addUser);
  */
 router.put('/:id', updateUser);
 
-
 /**
  * @swagger
  * /api/users/{id}:
@@ -332,7 +327,6 @@ router.put('/:id', updateUser);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-
 router.delete('/:id', deleteUser);
 
 /**
@@ -483,6 +477,51 @@ router.patch('/:id/email', [isAuthenticated], changeEmail);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-
 router.post('/moderator', addModeratorUser);
+
+/**
+ * @swagger
+ * /api/users/:id/verification:
+ *   patch:
+ *     summary: Update the verified property of a specific user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - verified
+ *             properties:
+ *               verified:
+ *                 type: bool
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "The user verification was given"
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "The verified parameter is required"
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.patch('/:id/verification', updateUserVerification);
+
 module.exports = router;

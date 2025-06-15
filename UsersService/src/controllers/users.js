@@ -3,7 +3,6 @@ const Account  = require('../models/account');
 const UserType  = require('../models/account');
 const User = require('../models/users')
 const axios = require('axios');
-const account = require('../models/account');
 
 // GET /api/users
 const getUsers = async (req, res) => {
@@ -249,4 +248,33 @@ const addModeratorUser = async (req, res) => {
   }
 };
 
-module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser};
+const updateUserVerification = async (req, res) => {
+  const { id } = req.params;
+  const { verified } = req.body;
+
+  if (verified === undefined) {
+    return res.status(400).json({ msg: 'The verified parameter is required'})
+  }
+
+  let user;
+
+  try {
+	user = await User.findByIdAndUpdate(
+		id,
+		{ verified: verified },
+		{ new: true }
+	);
+  }
+  catch (error) {
+	console.error('Error while attempting to update a user verification: ' + error);
+	return res.status(500).json({ msg: 'An error ocurred while attempting to update the user verification' })
+  }
+  
+  if (!user) {
+    return res.status(404).json({ msg: 'User not found' });
+  }
+
+  return res.status(200).json({ msg: `The user verification was ${verified? 'given' : 'withdrawn'}` });
+}
+
+module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification};

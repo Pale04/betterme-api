@@ -32,14 +32,15 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Conectado a MongoDB'))
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
+app.use('/api/docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use('/api/users', require('./routes/users'));
-app.use('/api/docs/', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 module.exports = app;
 
 if (require.main === module) {
   const port = process.env.PORT || 3000;
-  app.listen(port, () =>
-    console.log(`UsersService running on http://localhost:${port}`)
-  );
+  app.listen(port, () => {
+    console.log(`UsersService running on http://localhost:${port}/api/users`);
+    console.log(`UsersService documentation available on http://localhost:${port}/api/docs`);
+  });
 }

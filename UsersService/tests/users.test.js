@@ -174,4 +174,43 @@ describe('📦 Users API', () => {
     });
   });
   
+  describe('PATCH /api/users/:id/verification', () => {
+    it('Should update the verification property successfully', async () => {
+      const newUserResponse = await request(app).post('/api/users').send({
+        username:   'foo123',
+        password:   'Secret123!',
+        email:      'foo@example.com',
+        name:       'Foo Bar',
+        birthday:   '1990-05-20',
+        description:'test user',
+        phone:      '555-1234',
+        website:    'https://foo.com'
+      })
+
+      const res = await request(app)
+        .patch(`/api/users/${newUserResponse.body.user._id}/verification`)
+        .send({verified: true});
+      
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('msg', 'The user verification was given');
+    });
+
+    it('Include a non existent id', async () => {
+      const res = await request(app)
+        .patch(`/api/users/684742f2490d28da6a7a79f2/verification`)
+        .send({verified: true});
+
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('msg', 'User not found');
+    });
+
+    it('Not include a required request body', async () => {
+      const res = await request(app)
+        .patch(`/api/users/684742f2490d28da6a7a79f2/verification`)
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body).toHaveProperty('msg', 'The verified parameter is required');
+    });
+  });
 });
