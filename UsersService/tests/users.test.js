@@ -140,4 +140,18 @@ describe('📦 Users API', () => {
       await request(app).get(`/api/users/${created.account._id}`).expect(404);
     });
   });
+
+  describe('PATCH /api/users/:id/password', () => {
+    it('204 if successful', async () => {
+      await request(app).patch('/api/users/0123456789abcdef01234567/password/').send({currentPassword:'Secret123!', newPassword:'Secret1234!'}).expect(204);
+    });
+
+    it('401 if current password is wrong', async () => {
+      await request(app).patch('/api/users/0123456789abcdef01234567/password/').send({currentPassword:'Secret153!', newPassword:'Secret1234!'}).expect(401);
+    });
+
+    it('404 if user does not exist', async () => {
+      await request(app).patch('/api/users/0123456789abcdef01234aaa/password/').send({currentPassword:'Secret153!', newPassword:'Secret1234!'}).expect(401);
+    });
+  });
 });

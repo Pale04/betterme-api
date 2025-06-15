@@ -9,7 +9,8 @@ const {
   addUser,
   updateUser,
   deleteUser,
-  changePassword
+  changePassword,
+  changeEmail
 } = require('../controllers/users');
 
 /**
@@ -379,5 +380,52 @@ router.delete('/:id', deleteUser);
  *         $ref: '#/components/responses/ServerError'
  */
 router.patch('/:id/password', [isAuthenticated], changePassword);
+
+/**
+ * @swagger
+ * /api/users/{id}/email:
+ *   patch:
+ *     summary: Change the email of an account
+ *     security:
+ *       - BearerAuth: []
+  *     requestBody:
+  *       required: true
+  *       content:
+  *         application/json:
+  *           schema:
+  *             type: object
+  *             properties:
+  *               newEmail:
+  *                 type: string
+  *                 example: example@example.com
+  *               verificationCode:
+  *                 type: string
+  *                 example: 188722
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId of the account
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "User 60a7b2... updated"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.patch('/:id/email', [isAuthenticated], changeEmail);
 
 module.exports = router;

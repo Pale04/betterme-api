@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Account  = require('../models/account');
 const User = require('../models/users')
+const axios = require('axios');
 
 // GET /api/users
 const getUsers = async (req, res) => {
@@ -131,7 +132,7 @@ const deleteUser = async (req, res) => {
 // PATCH /api/users/:id/password
 const changePassword = async (req, res) => {
   const { id } = req.params;
-  const { currentPassword, newPassword }
+  const { currentPassword, newPassword };
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -154,7 +155,7 @@ const changePassword = async (req, res) => {
 
     await session.commitTransaction();
 
-    res.json({
+    res.status(204).json({
       msg: `User ${id} updated`,
     });
   } catch (err) {
@@ -165,4 +166,53 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword};
+// PATCH /api/users/:id/email
+const changeEmail = async (req, res) => {
+  const { id } = req.params;
+  const { verificationCode, newEmail };
+
+  const account = await Account.findOne({ account: id })
+
+  const payload = {
+    email: account.email,
+    code: verificationCode
+  };
+
+  const verifRes = await axios.post(
+    `${process.env.VERIFICATION_API}/api/verify/existent/confirm`,
+    payload
+  );
+
+  if (verifRes.status != 200) {
+    res.status(verifRes.status).json({ msg: 'Código inválido o expirado' });
+    return;
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const account = await Account.findByIdAndUpdate(
+      id,
+      { newEmail },
+      { new: true, session },
+    );
+
+    if (!account) {
+      await session.abortTransaction();
+      return res.status(404).json({ msg: 'Account not found' });
+    }
+
+    await session.commitTransaction();
+
+    res.status(204).json({
+      msg: `User ${id} updated`,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({ msg: 'Error while updating user', err });
+  } finally {
+    session.endSession();
+  }
+}
+
+module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail};

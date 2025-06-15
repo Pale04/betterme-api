@@ -1,7 +1,9 @@
 const { response }         = require('express');
 const mongoose   = require('mongoose');
 require('../models/verificationCode');
+require('../models/existingUserVerificationCode');
 const VerificationCode = mongoose.model('VerificationCode');
+const ExistingUserVerificationCode = mongoose.model('ExistingUserVerificationCode');
 console.log('DEBUG methods →', Object.keys(VerificationCode));
 console.log('findOne →', typeof VerificationCode.findOne);      // should print: function
 console.log('deleteMany →', typeof VerificationCode.deleteMany); //           : function
@@ -62,7 +64,56 @@ const confirmVerification = async (req, res = response) => {
   }
 };
 
+// POST /api/verify/existent/initiate
+// Body: { email }
+const initiateVerificationExistent = async (req, res = response) => {
+    const { email } = req.body;
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+  try {
+    await ExistingUserVerificationCode.deleteMany({ email, code });
+
+    await ExistingUserVerificationCode.create({ email, code });
+
+    await transporter.sendMail({
+      from:    `"BetterMe" <${process.env.SMTP_USER}>`,
+      to:      email,
+      subject: 'Código de verificación BetterMe',
+      text:    `Tu código de verificación es: ${code}`,
+      html:    `<p>Tu código de verificación es: <strong>${code}</strong></p>`
+    });
+
+    res.status(200).json({ msg: 'Código enviado' });
+  } catch (err) {
+    console.error('verification.initiate error ➜', err);
+    res.status(500).json({ msg: 'Error al enviar código' });
+  }
+};
+
+// POST /api/verify/existent/confirm
+// Body: { email, code }
+const confirmVerificationExistent = async (req, res = response) => {
+    const { email, code } = req.body;
+
+  try {
+    const record = await VerificationCode.findOneAndDelete({ email, code });
+    if (!record) {
+      return res.status(400).json({ msg: 'Código inválido o expirado' });
+    }
+
+    res.status(200).json({ msg: 'Verificado correctamente' });
+  } catch (err) {
+    console.error('verification.confirm error ➜', err.response?.data || err);
+    const status = err.response?.status || 500;
+    const msg    = err.response?.data?.msg || 'Error al crear cuenta';
+    res.status(status).json({ msg });
+  }
+};
+
 module.exports = {
   initiateVerification,
-  confirmVerification
+  confirmVerification,
+  initiateVerificationExistent,
+  confirmVerificationExistent
 };
