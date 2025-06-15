@@ -35,13 +35,6 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/users', require('./routes/users'));
 app.use('/api/docs/', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
-if (process.env.NODE_ENV !== 'test') {
-  const { verifyToken } = require('./middleware/verifyToken');
-  app.use('/api/users', verifyToken, require('./routes/users'));
-} else {
-  app.use('/api/users', require('./routes/users'));
-}
-
 module.exports = app;
 
 if (require.main === module) {

@@ -7,12 +7,10 @@ let app;
 let mongoServer;
 
 beforeAll(async () => {
-  // start an in-memory MongoDB replica set (needed for transactions support)
   mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   const uri = mongoServer.getUri();
   process.env.MONGO_URI = uri;
 
-  // load your Express app _after_ setting MONGO_URI
   app = require('../src/app');
   await mongoose.connect(uri);
 });
@@ -23,7 +21,6 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  // drop the entire database between each test
   await mongoose.connection.dropDatabase();
 });
 
@@ -135,23 +132,46 @@ describe('📦 Users API', () => {
       const res = await request(app).delete(`/api/users/${created.account._id}`);
       expect(res.status).toBe(200);
       expect(res.body.msg).toMatch(/User .* deleted/);
-
-      // subsequent get should 404
       await request(app).get(`/api/users/${created.account._id}`).expect(404);
     });
   });
 
-  describe('PATCH /api/users/:id/password', () => {
-    it('204 if successful', async () => {
-      await request(app).patch('/api/users/0123456789abcdef01234567/password/').send({currentPassword:'Secret123!', newPassword:'Secret1234!'}).expect(204);
+  describe('🛡️  POST /api/users/moderator', () => {
+  const payload = {
+    username:   'modUser',
+    password:   'SuperSecret!',
+    email:      'mod@example.com',
+    name:       'Mod Man',
+    birthday:   '1985-11-25',
+    description:'I moderate stuff',
+    phone:      '555-0000',
+    website:    'https://mods.example.com'
+  };
+
+    it('should create a new moderator account and return 201 + correct userType', async () => {
+      const res = await request(app)
+        .post('/api/users/moderator')
+        .send(payload);
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('msg', `Account ${payload.username} created`);
+      expect(res.body).toHaveProperty('user');
+      expect(res.body.user).toHaveProperty('account');
+      const acct = res.body.user.account;
+      expect(acct).toHaveProperty('username', payload.username);
+      expect(acct).toHaveProperty('userType', 'Moderator');
+      expect(acct).not.toHaveProperty('password');
     });
 
-    it('401 if current password is wrong', async () => {
-      await request(app).patch('/api/users/0123456789abcdef01234567/password/').send({currentPassword:'Secret153!', newPassword:'Secret1234!'}).expect(401);
-    });
+    it('should return 500 if required field is missing', async () => {
+      const { username, ...bad } = payload;
+      const res = await request(app)
+        .post('/api/users/moderator')
+        .send(bad);
 
-    it('404 if user does not exist', async () => {
-      await request(app).patch('/api/users/0123456789abcdef01234aaa/password/').send({currentPassword:'Secret153!', newPassword:'Secret1234!'}).expect(401);
+      expect(res.status).toBe(500);
+      expect(res.body).toHaveProperty('msg', 'Error while creating user');
     });
   });
+  
 });

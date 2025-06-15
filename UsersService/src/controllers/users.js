@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const Account  = require('../models/account');
+const UserType  = require('../models/account');
 const User = require('../models/users')
 const axios = require('axios');
+const account = require('../models/account');
 
 // GET /api/users
 const getUsers = async (req, res) => {
@@ -132,7 +134,7 @@ const deleteUser = async (req, res) => {
 // PATCH /api/users/:id/password
 const changePassword = async (req, res) => {
   const { id } = req.params;
-  const { currentPassword, newPassword };
+  const { currentPassword, newPassword } = req.body;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -169,7 +171,7 @@ const changePassword = async (req, res) => {
 // PATCH /api/users/:id/email
 const changeEmail = async (req, res) => {
   const { id } = req.params;
-  const { verificationCode, newEmail };
+  const { verificationCode, newEmail } = req.body;
 
   const account = await Account.findOne({ account: id })
 
@@ -215,4 +217,36 @@ const changeEmail = async (req, res) => {
   }
 }
 
-module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail};
+const addModeratorUser = async (req, res) => {
+  console.log('BODY RECEIVED ', req.body);
+
+  const {
+    username, password, email, name,
+    birthday, description, phone, website,
+  } = req.body;
+
+  try {
+    const account = await Account.create({
+      username, password, email, name, userType: 'Moderator'
+    });
+
+    const profile = await User.create({
+      account: account._id,
+      birthday,
+      description,
+      phone,
+      website
+    });
+
+    const populated = await profile.populate('account', '-password -__v');
+    res.status(201).json({
+      msg: `Account ${username} created`,
+      user: populated,
+    });
+  } catch (err) {
+    console.error('AddUser error ', err);
+    res.status(500).json({ msg: 'Error while creating user', err });
+  }
+};
+
+module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser};

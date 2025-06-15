@@ -10,7 +10,8 @@ const {
   updateUser,
   deleteUser,
   changePassword,
-  changeEmail
+  changeEmail,
+  addModeratorUser
 } = require('../controllers/users');
 
 /**
@@ -428,4 +429,60 @@ router.patch('/:id/password', [isAuthenticated], changePassword);
  */
 router.patch('/:id/email', [isAuthenticated], changeEmail);
 
+/**
+ * @swagger
+ * /api/users/moderator:
+ *   post:
+ *     summary: Create new account & profile for a moderator
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - email
+ *               - name
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               birthday:
+ *                 type: string
+ *                 format: date
+ *               description:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               website:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Account fooModerator created"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+
+router.post('/moderator', addModeratorUser);
 module.exports = router;
