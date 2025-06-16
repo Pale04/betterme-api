@@ -1,0 +1,30 @@
+# Ignorar archivos de configuración de usuario
+*.user
+*.suo
+
+# Ignorar binarios y compilaciones
+bin/
+obj/
+out/
+
+# Ignorar archivos de dependencias y paquetes
+*.dll
+*.pdb
+*.exe
+*.app
+*.ipa
+*.so
+*.dylib
+*.a
+*.lib
+*.nupkg
+*.snupkg
+*.tar.gz
+
+# Ignorar archivos de configuración y logs
+*.log
+*.vs/
+.vscode/
+
+# Ignorar archivos de Docker que no sean necesarios
+Dockerfile*

@@ -58,6 +58,30 @@ services:
       internal:
         ipv4_address: 172.16.0.5
 
+#   stats_service:
+#     image: betterme_stats_service:1.0
+#     depends_on:
+#       mongodb_service:
+#         condition: service_started
+#     ports:
+#       - "6973:6973"
+#    networks:
+#       internal:
+#         ipv4_address: 172.16.0.6
+
+  posts_service:
+    image: betterme_posts_service:1.0
+    depends_on:
+      mongodb_service:
+        condition: service_started
+    ports:
+      - "6974:8080"
+    networks:
+      internal:
+        ipv4_address: 172.16.0.7
+
+#  multimedia_service:
+
   mongodb_service:
     image: mongo
     restart: always
@@ -65,7 +89,7 @@ services:
       - mongodb:/data/db
     networks:
       internal:
-        ipv4_address: 172.16.0.8
+        ipv4_address: 172.16.0.9
 
 volumes:  
     mongodb:
