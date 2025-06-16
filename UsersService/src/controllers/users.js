@@ -259,8 +259,8 @@ const updateUserVerification = async (req, res) => {
   let user;
 
   try {
-	user = await User.findByIdAndUpdate(
-		id,
+	user = await User.findOneAndUpdate(
+		{ account: id},
 		{ verified: verified },
 		{ new: true }
 	);

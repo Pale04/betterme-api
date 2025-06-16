@@ -14,6 +14,42 @@ const router = express.Router();
 /**
  * @swagger
  * /betterme/verification-requests:
+ *    post:
+ *       summary: Add a new verification request
+ *       tags: [Verification Request]
+ *       requestBody:
+ *          required: true
+ *          content:
+ *             multipart/form-data:
+ *                schema:
+ *                   type: object
+ *                   properties:
+ *                      certificate:
+ *                         type: string
+ *                         format: binary
+ *                      identification:
+ *                         type: string
+ *                         format: binary
+ *       responses:
+ *          201:
+ *             description: The verification request was created correctly  
+ *          400:
+ *             description: Incorrect request body
+ *          401:
+ *             description: Incorrect token or expired token
+ *          409:
+ *             description: User already has a pending verification request
+ *          500:
+ *             description: Server error       
+ */
+router.post('/', [isAuthenticated], upload.fields([
+   { name: 'certificate', maxCount: 1 },
+   { name: 'identification', maxCount: 1 }
+ ]), addVerificationRequest);
+
+/**
+ * @swagger
+ * /betterme/verification-requests:
  *    get:
  *       summary: Get verification requests with pagination and orderes by date
  *       tags: [Verification Request]
@@ -71,42 +107,6 @@ router.get('/', [isAuthenticated], [isModerator], getVerificationRequests);
  *             description: The required document was not found   
  */
 router.get('/uploads/:fileName', [isAuthenticated], [isModerator], getVerificationRequestDocument);
-
-/**
- * @swagger
- * /betterme/verification-requests:
- *    post:
- *       summary: Add a new verification request
- *       tags: [Verification Request]
- *       requestBody:
- *          required: true
- *          content:
- *             multipart/form-data:
- *                schema:
- *                   type: object
- *                   properties:
- *                      certificate:
- *                         type: string
- *                         format: binary
- *                      identification:
- *                         type: string
- *                         format: binary
- *       responses:
- *          201:
- *             description: The verification request was created correctly  
- *          400:
- *             description: Incorrect request body
- *          401:
- *             description: Incorrect token or expired token
- *          409:
- *             description: User already has a pending verification request
- *          500:
- *             description: Server error       
- */
-router.post('/', [isAuthenticated], upload.fields([
-   { name: 'certificate', maxCount: 1 },
-   { name: 'identification', maxCount: 1 }
- ]), addVerificationRequest);
 
  /**
  * @swagger

@@ -1,6 +1,7 @@
 const { response } = require('express');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
 const VerificationRequest = require('../models/VerificationRequest');
 
 const getVerificationRequests = async (req, res = response) => {
@@ -77,8 +78,8 @@ const addVerificationRequest = async (req, res = response) => {
    }
 
    const email = req.user.email;
-   const certificateUrl = req.files['certificate'][0].path;
-   const identificationUrl = req.files['identification'][0].path;
+   const certificateUrl = standardizePath(req.files['certificate'][0].path);
+   const identificationUrl = standardizePath(req.files['identification'][0].path);
 
    let newVerificationRequest = new VerificationRequest({userId, email, certificateUrl, identificationUrl})
 
@@ -103,7 +104,7 @@ const addVerificationRequest = async (req, res = response) => {
 const evaluateVerificationRequest = async (req, res = response) => {
    const requestApproved = req.body.approved;
 
-   if (requestApproved == null) {
+   if (requestApproved === undefined) {
       return res.status(400).json({
          msg: 'The approved field is required'
       });
@@ -124,7 +125,6 @@ const evaluateVerificationRequest = async (req, res = response) => {
          msg: 'Verification request not found'
       });
    }
-
    if (updatedVerificationRequest.status !== 'Pending') {
       return res.status(409).json({
          msg: 'The verification request is already evaluated'
@@ -142,27 +142,50 @@ const evaluateVerificationRequest = async (req, res = response) => {
       });
    }
 
-   //TODO: comunicarle al servicio de Users que actualice el campo de verified a true
-   //Utilizar RabitMQ
+   if (requestApproved) {
+      await sendUpdateUserVerificationRequest(updatedVerificationRequest.userId)
+   }
 
-
-   const certificatePath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.certificateUrl);
-   const identificationPath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, updatedVerificationRequest.identificationUrl);
-   const fileRemovalErrorHandler = (error) => {
-      if (error) {
-        console.error(error);
-      }
-   };
-   fs.unlink(certificatePath, fileRemovalErrorHandler);
-   fs.unlink(identificationPath, fileRemovalErrorHandler);
+   removeUploadedFile(updatedVerificationRequest.certificateUrl);
+   removeUploadedFile(updatedVerificationRequest.identificationUrl)
 
    return res.status(200).json({
       msg: 'Verification request updated successfully'
    });
 };
 
-const updateUserVerification = () => {
-   
+const sendUpdateUserVerificationRequest = async (userId) => {
+   await axios.patch(`${process.env.USERS_SERVICE_URL}/${userId}/verification`, {
+      verified: true
+   })
+   .then(response => {
+      if(response.status != 200) {
+         console.error('Error while attempting to update the verification state to user: ' + userId + '\nResponse: ' + response.data);
+      }
+   })
+   .catch(error => {
+      console.error('Error while attempting to update the verification state to user: ' + userId + '\nError: ' + error);
+   });
+};
+
+const removeUploadedFile = (fileName) => {
+   const filePath = path.join(__dirname, process.env.UPLOADS_FOLDER_FOR_DELETE, fileName);
+   fs.unlink(filePath, (error) => {
+      if (error) {
+        console.error(error);
+      }
+   });
+};
+
+const standardizePath = (filePath) => {
+   let newPath;
+   if (filePath.includes('\\')) {
+      newPath = filePath.split('\\').join('/');
+   }
+   else {
+      newPath = filePath;
+   }
+   return newPath;
 };
 
 module.exports = { getVerificationRequests, getVerificationRequestDocument, addVerificationRequest, evaluateVerificationRequest };

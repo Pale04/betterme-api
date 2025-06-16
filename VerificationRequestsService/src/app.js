@@ -28,7 +28,13 @@ mongoose.connect(process.env.MONGO_URI)
    .then(() => console.log('Established MongoDB connection'))
    .catch(err => console.error('Error while attempting to connect to MongoDB', err));
 
-app.use(express.json()); 
+app.use((req, res, next) => {
+  if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
+    return next();
+  }
+  express.json()(req, res, next);
+});
+
 app.use('/betterme/verification-requests', require('./routes/VerificationRequests'));
 
 module.exports = app;
