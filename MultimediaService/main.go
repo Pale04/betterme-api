@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
+	"os"
 
 	pb "MultimediaService/proto"
 
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
 var (
-	port = 6970
-	ip   = ""
+	port = 6979
+	ip   = "localhost"
 )
 
 type server struct {
@@ -20,10 +21,18 @@ type server struct {
 }
 
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", ip, port))
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+		return
+	}
+
+	lis, err := net.Listen("tcp", os.Getenv("GRPC_HOST"))
 
 	if err != nil {
 		log.Fatal("Error starting server: ", err)
+		return
 	}
 
 	s := grpc.NewServer()

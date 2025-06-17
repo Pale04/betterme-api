@@ -228,6 +228,7 @@ const addModeratorUser = async (req, res) => {
     const account = await Account.create({
       username, password, email, name, userType: 'Moderator'
     });
+    console.log('Account created with ID:', account._id);
 
     const profile = await User.create({
       account: account._id,

@@ -7,7 +7,6 @@ const UserSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref:  'Account',
       required: true,
-      unique: true,       
     },
     birthday:    {
         type: Date
