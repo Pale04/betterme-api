@@ -1,99 +1,183 @@
 services:
+  users_db:
+    image: mongo
+    restart: always
+    volumes:
+      - users_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.22
+
   authentication_service:
-    image: betterme_auth_service:1.0
+    image: betterme/auth_service
+    restart: always
     depends_on:
-      mongodb_service:
+      users_db:
         condition: service_started
     ports:
       - "6968:6968"
+    environment:
+      MONGO_URI: mongodb://users_db:27017/betterme_users_db
     networks:
       internal:
         ipv4_address: 172.16.0.1
 
   users_service:
-    image: betterme_users_service:1.0
+    image: betterme/users_service
+    restart: always
     depends_on:
-      mongodb_service:
+      users_db:
         condition: service_started
     ports:
       - "6969:6969"
+    environment:
+      MONGO_URI: mongodb://users_db:27017/betterme_users_db
     networks:
       internal:
         ipv4_address: 172.16.0.2
 
+  verification_db:
+    image: mongo
+    restart: always
+    volumes:
+      - verification_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.23
+
   verification_requests_service:
-    image: betterme_verifications_service:1.0
+    image: betterme/verifications_service
+    restart: always
     depends_on:
-      mongodb_service:
+      verification_db:
         condition: service_started
     ports:
       - "6970:6970"
+    environment:
+      MONGO_URI: mongodb://verification_db:27017/betterme_verification_db
     volumes:
       - verification_documents:/app/src/uploads
     networks:
       internal:
         ipv4_address: 172.16.0.3
 
+  email_db:
+    image: mongo
+    restart: always
+    volumes:
+      - email_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.24
+
   email_service:
-    image: betterme_email_service:1.0
+    image: betterme/email_service
+    restart: always
     depends_on:
-      mongodb_service:
+      email_db:
         condition: service_started
       users_service:
         condition: service_started
     ports:
       - "6971:6971"
+    environment:
+      MONGO_URI: mongodb://email_db:27017/betterme_email_db
     networks:
       internal:
         ipv4_address: 172.16.0.4
 
+  reports_db:
+    image: mongo
+    restart: always
+    volumes:
+      - reports_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.25
+
   reports_service:
-    image: betterme_reports_service:1.0
+    image: betterme/reports_service
+    restart: always
     depends_on:
-      mongodb_service:
+      reports_db:
         condition: service_started
     ports:
       - "6972:6972"
+    environment:
+      MONGO_URI: mongodb://reports_db:27017/betterme_reports_db
     networks:
       internal:
         ipv4_address: 172.16.0.5
 
-#   stats_service:
-#     image: betterme_stats_service:1.0
-#     depends_on:
-#       mongodb_service:
-#         condition: service_started
-#     ports:
-#       - "6973:6973"
-#    networks:
-#       internal:
-#         ipv4_address: 172.16.0.6
+  stats_db:
+    image: mongo
+    restart: always
+    volumes:
+      - stats_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.26
+
+  stats_service:
+    image: betterme/stats_service
+    restart: always
+    depends_on:
+      stats_db:
+        condition: service_started
+    ports:
+      - "6973:6973"
+    environment:
+      MONGO_URI: mongodb://stats_db:27017/betterme_stats_db
+  networks:
+      internal:
+        ipv4_address: 172.16.0.6
+
+  posts_db:
+    image: mongo
+    restart: always
+    volumes:
+      - posts_db_data:/data/db
+    networks:
+      internal:
+        ipv4_address: 172.16.0.27
 
   posts_service:
-    image: betterme_posts_service:1.0
+    image: betterme/posts_service:1.0
+    restart: always
     depends_on:
-      mongodb_service:
+      posts_db:
         condition: service_started
     ports:
       - "6974:8080"
+    environment:
+      MONGO_URI: mongodb://posts_db:27017/betterme_posts_db
     networks:
       internal:
         ipv4_address: 172.16.0.7
 
-#  multimedia_service:
-
-  mongodb_service:
-    image: mongo
+  multimedia service:
+    image: betterme/multimedia_service
     restart: always
+    depends_on:
+      posts_db:
+        condition: service_started
+    ports:
+      - "6979:6979"
     volumes:
-      - mongodb:/data/db
+      - multimedia_documents:/uploads
+    environment:
+      MONGO_URI: mongodb://posts_db:27017/betterme_posts_db
     networks:
       internal:
-        ipv4_address: 172.16.0.9
+        ipv4_address: 172.16.0.8
 
 volumes:  
-    mongodb:
+    multimedia_documents:
     verification_documents:
+    users_db_data:
+    auth_db_data:
+    verification_db_data:
+    email_db_data:
 
 networks:
   internal:
