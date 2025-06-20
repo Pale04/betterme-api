@@ -8,6 +8,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func streamMultimedia(file da.FileData, id string, stream pb.MultimediaService_GetPostMultimediaServer) error {
@@ -63,16 +66,27 @@ func (s *server) GetUserProfileImage(user *pb.UserInfo, stream pb.MultimediaServ
 }
 
 func (s *server) CreatePost(ctx context.Context, post *pb.Post) (*pb.Post, error) {
-	postAdded, err := da.WritePost(models.Post{})
-
-	if err != nil {
-		logger.Error(err)
-		return &pb.Post{}, err
+	//Aca faltaba como crear un objeto post por que no leia nada i no guardaba nada xdd
+	m := models.Post{
+		Title:       post.GetTitle(),
+		Description: post.GetDescription(),
+		Category:    post.GetCategory(),
+		UserId:      post.GetUserId(),
+		TimeStamp:   post.GetTimeStamp().AsTime(),
+		Status:      post.GetStatus(),
 	}
 
-	newPost := postAdded.ToProto()
+	if !m.IsValid() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid post payload")
+	}
 
-	return &newPost, nil
+	saved, err := da.WritePost(m)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to write post: %v", err)
+	}
+
+	protoOut := saved.ToProto()
+	return &protoOut, nil
 }
 
 func (s *server) UploadPostMultimedia(stream pb.MultimediaService_UploadPostMultimediaServer) error {
@@ -102,9 +116,16 @@ func (s *server) UploadPostMultimedia(stream pb.MultimediaService_UploadPostMult
 		}
 	}
 
+	// da.WriteFile(da.FileData{
+	// 	Contents: []byte{},
+	// 	Name:     "post" + resourceId + ext,
+	// 	Source:   da.Post,
+	// })
+
+	// Faltaba poner el "." y que el buffer leyera los bytes con lo de buffer.bytes
 	da.WriteFile(da.FileData{
-		Contents: []byte{},
-		Name:     "post" + resourceId + ext,
+		Contents: buffer.Bytes(),
+		Name:     "post" + resourceId + "." + ext,
 		Source:   da.Post,
 	})
 
