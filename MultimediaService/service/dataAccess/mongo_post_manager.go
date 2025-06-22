@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	database     = "betterMe"
+	database     = "betterMeDB"
 	dbCollection = "post"
 )
 

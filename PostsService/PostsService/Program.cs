@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using PostsService.Models;
+using System.Text.Json.Serialization;
 using PostsService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.ConfigureHttpJsonOptions(opts =>
+{
+    opts.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -35,21 +41,25 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAllOrigins");
 
 //GET /posts?category={Category}
-app.MapGet("/posts", async ([FromServices] MongoDbContext dbContext, [FromQuery] Category? category) =>
+app.MapGet("/posts", async (
+    [FromServices] MongoDbContext dbContext,
+    [FromQuery(Name = "category")] string? categoryText) =>
 {
-    var filterBuilder = Builders<Post>.Filter;
-    var timeFilter = filterBuilder.Empty;
-
-    var statusFilter = filterBuilder.In(p => p.Status, new[] { Status.Published, Status.Reported });
-
-    FilterDefinition<Post> categoryFilter = filterBuilder.Empty;
-    if (category.HasValue)
+    Category? category = null;
+    if (!string.IsNullOrWhiteSpace(categoryText)
+     && Enum.TryParse<Category>(categoryText, ignoreCase: true, out var parsed))
     {
-        categoryFilter = filterBuilder.Eq(p => p.Category, category.Value);
+      category = parsed;
     }
 
-    var combined = filterBuilder.And(statusFilter, categoryFilter);
+    var filterBuilder = Builders<Post>.Filter;
+    var statusFilter  = filterBuilder.In(p => p.Status,
+                          new[] { Status.Published, Status.Reported });
+    var categoryFilter = category.HasValue
+        ? filterBuilder.Eq(p => p.Category, category.Value)
+        : filterBuilder.Empty;
 
+    var combined = filterBuilder.And(statusFilter, categoryFilter);
     var posts = await dbContext.PostsCollection
         .Find(combined)
         .SortByDescending(p => p.Timestamp)
@@ -59,8 +69,7 @@ app.MapGet("/posts", async ([FromServices] MongoDbContext dbContext, [FromQuery]
     return Results.Ok(posts);
 })
 .WithSummary("Get a list of the newest posts by category")
-.Produces(200)
-.Produces(400);
+.Produces<List<Post>>(200);
 
 //GET /posts/user/{userId}
 app.MapGet("/posts/user/{userId}", async ([FromServices] MongoDbContext dbContext, string userId) =>

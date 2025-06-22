@@ -1,7 +1,7 @@
 package dataAccess
 
 import (
-	"MultimediaService/loggingService"
+	logger "MultimediaService/loggingService"
 	"bytes"
 	"errors"
 	"fmt"
@@ -55,17 +55,29 @@ func getVideo(fileName string) (FileData, error) {
 }
 
 func GetFile(fileName string, fileSource ImageSource) (FileData, error) {
-	format := filepath.Ext(fileName)
-
-	switch format {
-	case ".png", ".jpg", ".jpeg":
-		return getImage(fileName, fileSource)
-	case ".mp4", ".AVI", ".MOV":
-		return getVideo(fileName)
-	default:
-		logger.Error(fmt.Errorf("Cannot read file. Unsupported file format %s", format))
-		return FileData{}, errors.New("unsupported file format")
+	var pathExt string
+	switch fileSource {
+	case User:
+		pathExt = "users/"
+	case Post:
+		pathExt = "posts/"
 	}
+	// look for post<ID>.<anything>
+	pattern := path + pathExt + "post" + fileName + ".*"
+	matches, err := filepath.Glob(pattern)
+	if err != nil || len(matches) == 0 {
+		return FileData{}, fmt.Errorf("no file for %s (tried %q)", fileName, pattern)
+	}
+	realPath := matches[0]
+	bts, err := os.ReadFile(realPath)
+	if err != nil {
+		return FileData{}, err
+	}
+	return FileData{
+		Contents: bts,
+		Name:     filepath.Base(realPath),
+		Source:   fileSource,
+	}, nil
 }
 
 func WriteFile(file FileData) error {

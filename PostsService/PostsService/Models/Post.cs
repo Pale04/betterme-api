@@ -7,10 +7,10 @@ namespace PostsService.Models
 {
     public enum Category
     {
-        Workout,
-        Health,
-        Medicine,
-        Food
+        Ejercicio,
+        Salud,
+        Medicina,
+        Alimentacion
     }
 
     public enum Status
@@ -42,7 +42,7 @@ namespace PostsService.Models
         [BsonElement("userId")]
         public string UserId { get; set; } = null!;
 
-        [BsonElement("timestamp")]
+        [BsonElement("timeStamp")]
         [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime Timestamp { get; set; }
 
