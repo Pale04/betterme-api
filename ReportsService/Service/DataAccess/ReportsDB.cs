@@ -31,8 +31,8 @@ namespace Service.DataAccess
             }
             else
             {
-                var queryableCollection = _reportsCollection.AsQueryable();
-                foundReport = queryableCollection.OrderBy(r => r.ReportDate).FirstOrDefault();
+                var filter = Builders<ReportSchema>.Filter.Eq(r => r.Evaluated, false);
+                foundReport = await _reportsCollection.Find(filter).FirstOrDefaultAsync();
             }
 
             return foundReport?.ToDto();
