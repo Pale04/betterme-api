@@ -142,7 +142,7 @@ services:
         ipv4_address: 172.16.0.27
 
   posts_service:
-    image: betterme/posts_service:1.0
+    image: betterme/posts_service
     restart: always
     depends_on:
       posts_db:
