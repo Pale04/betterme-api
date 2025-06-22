@@ -116,16 +116,9 @@ func (s *server) UploadPostMultimedia(stream pb.MultimediaService_UploadPostMult
 		}
 	}
 
-	// da.WriteFile(da.FileData{
-	// 	Contents: []byte{},
-	// 	Name:     "post" + resourceId + ext,
-	// 	Source:   da.Post,
-	// })
-
-	// Faltaba poner el "." y que el buffer leyera los bytes con lo de buffer.bytes
 	da.WriteFile(da.FileData{
 		Contents: buffer.Bytes(),
-		Name:     "post" + resourceId + "." + ext,
+		Name:     resourceId + "." + ext,
 		Source:   da.Post,
 	})
 
@@ -161,11 +154,23 @@ func (s *server) UploadProfileImage(stream pb.MultimediaService_UploadProfileIma
 		}
 	}
 
-	da.WriteFile(da.FileData{
-		Contents: []byte{},
-		Name:     "post" + resourceId + ext,
+	err := da.WriteFile(da.FileData{
+		Contents: buffer.Bytes(),
+		Name:     resourceId + "." + ext,
 		Source:   da.User,
 	})
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	err = da.SetImageRoute(resourceId, ext)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
 
 	return stream.SendAndClose(&pb.UserInfo{
 		Id: resourceId,

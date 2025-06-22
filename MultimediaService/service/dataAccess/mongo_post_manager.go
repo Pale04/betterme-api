@@ -96,3 +96,39 @@ func WritePost(post m.Post) (m.Post, error) {
 
 	return post, nil
 }
+
+func SetImageRoute(postId string, multExtension string) error {
+	client, err := mongo.Connect(options.Client().ApplyURI(os.Getenv("DATABASE_NAME")))
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			logger.Error(err)
+		}
+	}()
+
+	coll := client.Database(database).Collection(dbCollection)
+
+	post := m.Post{}
+	err = coll.FindOne(context.TODO(), bson.M{"_id": postId}).Decode(&post)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	post.MultimediaExtension = multExtension
+
+	_, err = coll.UpdateOne(context.TODO(), bson.M{"_id": postId}, post)
+
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	return nil
+}
