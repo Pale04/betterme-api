@@ -20,7 +20,7 @@ namespace Service.Services
 
         public async Task UpdatePostState(string postId, PostState state)
         {
-            HttpResponseMessage httpResponse = await _httpClient.PostAsJsonAsync($"{postId}/{state}", new { State = state });
+            HttpResponseMessage httpResponse = await _httpClient.PatchAsJsonAsync($"{postId}/status", new { State = state.ToString() });
 
             if (httpResponse.StatusCode != HttpStatusCode.OK)
             {
