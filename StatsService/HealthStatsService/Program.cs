@@ -1,7 +1,6 @@
 using HealthStatsService.Models;
 using HealthStatsService.Services;
 using Microsoft.AspNetCore.Mvc;       
-using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,11 +69,12 @@ app.MapGet("/healthstats/{userId}", async ([FromServices] MongoDbContext dbConte
         return Results.BadRequest(new { msg = "Invalid userId" });
     }
 
-    var fourMonthsAgo = DateTime.UtcNow.AddMonths(-4);
+    var oneMonthAgoDate = DateTime.UtcNow.AddDays(-28);
+    Console.WriteLine(userId + oneMonthAgoDate);
 
     try
     {
-        var filter = Builders<HealthStat>.Filter.Where(stat => stat.UserId == userId && stat.Date >= fourMonthsAgo);
+        var filter = Builders<HealthStat>.Filter.Where(stat => stat.UserId == userId && stat.Date.CompareTo(oneMonthAgoDate) >= 0);
         var stats = await dbContext.HealthStatsCollection
                                    .Find(filter)
                                    .SortByDescending(stat => stat.Date)
