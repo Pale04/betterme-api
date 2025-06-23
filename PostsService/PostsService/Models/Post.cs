@@ -49,5 +49,8 @@ namespace PostsService.Models
         [BsonElement("status")]
         [BsonRepresentation(BsonType.String)]
         public Status Status { get; set; }
+
+        [BsonElement("multExtension")]
+        public string MultimediaExtension {get; set;}
     }
 }

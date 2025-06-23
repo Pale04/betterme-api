@@ -56,6 +56,7 @@ func getVideo(fileName string) (FileData, error) {
 
 func GetFile(fileName string, fileSource ImageSource) (FileData, error) {
 	var pathExt string
+
 	switch fileSource {
 	case User:
 		pathExt = "users/"
@@ -63,7 +64,7 @@ func GetFile(fileName string, fileSource ImageSource) (FileData, error) {
 		pathExt = "posts/"
 	}
 	// look for post<ID>.<anything>
-	pattern := path + pathExt + "post" + fileName + ".*"
+	pattern := path + pathExt + fileName + ".*"
 	matches, err := filepath.Glob(pattern)
 	if err != nil || len(matches) == 0 {
 		return FileData{}, fmt.Errorf("no file for %s (tried %q)", fileName, pattern)
