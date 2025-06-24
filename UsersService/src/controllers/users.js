@@ -32,6 +32,18 @@ const getUser = async (req, res) => {
   }
 };
 
+const getBannedUsers = async (req, res) => {
+  try {
+    const users = await User
+      .find({ active: false })
+      .populate('account', '-password -__v')
+      .select('-__v');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ msg: 'Error while obtaining banned users', err });
+  }
+}
+
 // POST /api/users 
 const addUser = async (req, res) => {
   console.log('BODY RECEIVED ', req.body);
@@ -278,4 +290,4 @@ const updateUserVerification = async (req, res) => {
   return res.status(200).json({ msg: `The user verification was ${verified? 'given' : 'withdrawn'}` });
 }
 
-module.exports = {getUsers,getUser,addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification};
+module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification};
