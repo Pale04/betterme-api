@@ -10,7 +10,8 @@ const {
   changePassword,
   changeEmail,
   addModeratorUser,
-  updateUserVerification
+  updateUserVerification,
+  getBannedUsers
 } = require('../controllers/users');
 
 /**
@@ -146,6 +147,29 @@ const {
  *         $ref: '#/components/responses/ServerError'
  */
 router.get('/', getUsers);
+
+/**
+ * @swagger
+ * /api/users/banned:
+ *   get:
+ *     summary: Get the List of all banned users
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/banned', getBannedUsers);
 
 /**
  * @swagger

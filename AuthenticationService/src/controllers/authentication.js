@@ -11,6 +11,8 @@ const login = async (req, res = response) => {
 
     if (!account || account.password !== password) {
         return res.status(401).json({ msg: 'Non matching credentials' });
+    } else if (account.active == false) {
+        return res.status(401).json({ msg: 'Account banned'} );
     }
 
     const payload = {
