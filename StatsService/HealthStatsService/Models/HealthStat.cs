@@ -16,11 +16,9 @@ namespace HealthStatsService.Models
         [BsonElement("userId")]
         public string UserId { get; set; } = null!;
 
+
         [BsonElement("arms")]
         public double? Arms { get; set; }
-
-        [BsonElement("height")]
-        public double? Height { get; set; }
 
         // Mood is stored as an integer 1..5 (e.g. 1=Mad, 2=Sad, 3=Chill, 4=Anxious, 5=Happy)
         [BsonElement("mood")]

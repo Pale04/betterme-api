@@ -46,15 +46,54 @@ app.MapPost("/healthstats", async ([FromServices] MongoDbContext dbContext, Heal
         return Results.BadRequest(new { msg = "Date must be provided" });
     }
 
+    
+    var getExistentStats = Builders<HealthStat>.Filter.Where(stat => stat.Date.CompareTo(incomingStat.Date) == 0);
     try
     {
-        await dbContext.HealthStatsCollection.InsertOneAsync(incomingStat);
-        return Results.Created($"/healthstats/{incomingStat.UserId}", incomingStat);
+        var todaysStats = await dbContext.HealthStatsCollection.Find(getExistentStats).FirstOrDefaultAsync();
+        if (todaysStats == null)
+        {
+            await dbContext.HealthStatsCollection.InsertOneAsync(incomingStat);
+        }
+        else
+        {
+            //var filter = Builders<HealthStat>.Filter.Eq("_id", todaysStats.Id);
+            UpdateDefinition<HealthStat> update;
+
+            if (incomingStat.Arms != null)
+            {
+                update = Builders<HealthStat>.Update.Set("arms", incomingStat.Arms);
+            }
+            else if (incomingStat.Mood != null)
+            {
+                update = Builders<HealthStat>.Update.Set("mood", incomingStat.Mood);
+            }
+            else if (incomingStat.SleepHours != null)
+            {
+                update = Builders<HealthStat>.Update.Set("sleepHours", incomingStat.SleepHours);
+            }
+            else if (incomingStat.Waist != null)
+            {
+                update = Builders<HealthStat>.Update.Set("waist", incomingStat.Waist);
+            }
+            else if (incomingStat.Weight != null)
+            {
+                update = Builders<HealthStat>.Update.Set("weight", incomingStat.Weight);
+            }
+            else// if (incomingStat.WaterIntake != null)
+            {
+                update = Builders<HealthStat>.Update.Set("waterIntake", incomingStat.WaterIntake);
+            }
+
+            await dbContext.HealthStatsCollection.UpdateOneAsync(getExistentStats, update);
+        }
     }
-    catch (MongoException mex)
+    catch (MongoException error)
     {
-        return Results.Problem(detail: mex.Message, statusCode: 500);
+        return Results.Problem(detail: error.Message, statusCode: 500);
     }
+    
+    return Results.Created($"/healthstats/{incomingStat.UserId}", incomingStat);
 })
 .WithSummary("Add the user health stats partially or totally, for a specific day")
 .Produces(201)
@@ -70,7 +109,6 @@ app.MapGet("/healthstats/{userId}", async ([FromServices] MongoDbContext dbConte
     }
 
     var oneMonthAgoDate = DateTime.UtcNow.AddDays(-28);
-    Console.WriteLine(userId + oneMonthAgoDate);
 
     try
     {
