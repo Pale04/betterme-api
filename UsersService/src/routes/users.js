@@ -11,7 +11,8 @@ const {
   changeEmail,
   addModeratorUser,
   updateUserVerification,
-  getBannedUsers
+  getBannedUsers,
+  getUserByEmail
 } = require('../controllers/users');
 
 /**
@@ -200,6 +201,36 @@ router.get('/banned', getBannedUsers);
  *         $ref: '#/components/responses/ServerError'
  */
 router.get('/:id', getUser);
+
+/**
+ * @swagger
+ * /api/users/{email}:
+ *   get:
+ *     summary: Retrieve one user by account email
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Email linked to the account
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/:email', getUserByEmail);
 
 /**
  * @swagger

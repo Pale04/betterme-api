@@ -32,9 +32,27 @@ const getUser = async (req, res) => {
   }
 };
 
+// GET /api/users/:email
+const getUserByEmail = async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const user = await Account
+      .findOne({ email: email })
+      .populate('account', '-password -__v')
+      .select('-__v');
+
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: 'Error while obtaining user', err });
+  }
+};
+
+// GET /api/users/banned
 const getBannedUsers = async (req, res) => {
   try {
-    const users = await User
+    const users = await Account
       .find({ active: false })
       .populate('account', '-password -__v')
       .select('-__v');
@@ -290,4 +308,4 @@ const updateUserVerification = async (req, res) => {
   return res.status(200).json({ msg: `The user verification was ${verified? 'given' : 'withdrawn'}` });
 }
 
-module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification};
+module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification, getUserByEmail};
