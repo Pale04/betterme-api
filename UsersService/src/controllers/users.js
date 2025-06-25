@@ -96,6 +96,41 @@ const addUser = async (req, res) => {
 };
 
 // PUT /api/users/:id
+const updateUserState = async (req, res) => {
+  const { id } = req.params;
+  const { active } = req.body;
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const account = await Account.findByIdAndUpdate(
+      id,
+      { active },
+      { new: true, session },
+    );
+
+    if (!account) {
+      await session.abortTransaction();
+      return res.status(404).json({ msg: 'Account not found' });
+    }
+
+    await session.commitTransaction();
+
+    const populated = await account.populate('account', '-password -__v');
+
+    res.json({
+      msg: `User ${id} updated`,
+      user: populated,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    res.status(500).json({ msg: 'Error while updating user', err });
+  } finally {
+    session.endSession();
+  }
+};
+
+// PUT /api/users/:id
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const {

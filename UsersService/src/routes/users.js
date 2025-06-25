@@ -6,6 +6,7 @@ const {
   getUser,
   addUser,
   updateUser,
+  updateUserState,
   deleteUser,
   changePassword,
   changeEmail,
@@ -288,6 +289,49 @@ router.get('/:email', getUserByEmail);
  */
 router.post('/', addUser);
 
+/**
+ * @swagger
+ * /api/users/{id}/state:
+ *   put:
+ *     summary: Update account state
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId of the account
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               active:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/:id/state', updateUserState);
 /**
  * @swagger
  * /api/users/{id}:
