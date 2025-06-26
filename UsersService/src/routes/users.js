@@ -247,7 +247,7 @@ router.get('/:id', getUser);
 
 /**
  * @swagger
- * /api/users/{email}:
+ * /api/users/email/{email}:
  *   get:
  *     summary: Retrieve one user by account email
  *     security:
@@ -273,7 +273,7 @@ router.get('/:id', getUser);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get('/:email', getUserByEmail);
+router.get('/email/:email', getUserByEmail);
 
 /**
  * @swagger
@@ -374,6 +374,7 @@ router.post('/', addUser);
  *         $ref: '#/components/responses/ServerError'
  */
 router.put('/:id/state', updateUserState);
+
 /**
  * @swagger
  * /api/users/{id}:
