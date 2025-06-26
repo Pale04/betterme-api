@@ -57,10 +57,13 @@ const getUser = async (req, res) => {
   try {
     const user = await User
       .findOne({ account: id })
+      .populate('account', '-password -__v')
       .select('-__v');
+
     if (!user) return res.status(404).json({ msg: 'User not found' });
     res.json(user);
   } catch (err) {
+    console.error('Error fetching user:', err);
     res.status(500).json({ msg: 'Error while obtaining user', err });
   }
 };
@@ -152,45 +155,41 @@ const updateUserState = async (req, res) => {
   }
 };
 
-// PUT /api/users/:id
+// PATCH /api/users/edit/:id
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const {
-    username, email, name, active, userType,
+    username, email, name,
     birthday, description, phone, website,
   } = req.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const account = await Account.findByIdAndUpdate(
       id,
-      { username, email, name, active, userType },
-      { new: true, session },
+      { username, email, name },
+      { new: true }
     );
     if (!account) {
-      await session.abortTransaction();
       return res.status(404).json({ msg: 'Account not found' });
     }
 
     const profile = await User.findOneAndUpdate(
       { account: id },
       { birthday, description, phone, website },
-      { new: true, session },
+      { new: true }
     );
-
-    await session.commitTransaction();
+    if (!profile) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
 
     const populated = await profile.populate('account', '-password -__v');
-    res.json({
+    return res.json({
       msg: `User ${id} updated`,
       user: populated,
     });
   } catch (err) {
-    await session.abortTransaction();
-    res.status(500).json({ msg: 'Error while updating user', err });
-  } finally {
-    session.endSession();
+    console.error(err);
+    return res.status(500).json({ msg: 'Error while updating user', err });
   }
 };
 

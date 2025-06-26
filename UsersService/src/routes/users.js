@@ -378,7 +378,7 @@ router.put('/:id/state', updateUserState);
 /**
  * @swagger
  * /api/users/{id}:
- *   put:
+ *   patch:
  *     summary: Update account & profile
  *     security:
  *       - BearerAuth: []
@@ -435,7 +435,7 @@ router.put('/:id/state', updateUserState);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/:id', updateUser);
+router.patch('/edit/:id', updateUser);
 
 /**
  * @swagger

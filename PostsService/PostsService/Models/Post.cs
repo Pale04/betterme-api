@@ -10,7 +10,7 @@ namespace PostsService.Models
         Ejercicio,
         Salud,
         Medicina,
-        Alimentacion
+        Alimentación
     }
 
     public enum Status
