@@ -23,7 +23,6 @@ const getUser = async (req, res) => {
   try {
     const user = await User
       .findOne({ account: id })
-      .populate('account', '-password -__v')
       .select('-__v');
     if (!user) return res.status(404).json({ msg: 'User not found' });
     res.json(user);
@@ -37,13 +36,13 @@ const getUserByEmail = async (req, res) => {
   const { email } = req.params;
 
   try {
-    const user = await Account
+    const account = await Account
       .findOne({ email: email })
-      .populate('account', '-password -__v')
-      .select('-__v');
+      .select('-password -__v');
 
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-    res.json(user);
+    if (!account) return res.status(404).json({ msg: 'Account not found' });
+
+    res.json(account);
   } catch (err) {
     res.status(500).json({ msg: 'Error while obtaining user', err });
   }
@@ -54,7 +53,6 @@ const getBannedUsers = async (req, res) => {
   try {
     const users = await Account
       .find({ active: false })
-      .populate('account', '-password -__v')
       .select('-__v');
     res.json(users);
   } catch (err) {
@@ -100,33 +98,23 @@ const updateUserState = async (req, res) => {
   const { id } = req.params;
   const { active } = req.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const account = await Account.findByIdAndUpdate(
       id,
       { active },
-      { new: true, session },
+      { new: true },
     );
 
     if (!account) {
-      await session.abortTransaction();
       return res.status(404).json({ msg: 'Account not found' });
     }
 
-    await session.commitTransaction();
-
-    const populated = await account.populate('account', '-password -__v');
-
     res.json({
       msg: `User ${id} updated`,
-      user: populated,
     });
   } catch (err) {
-    await session.abortTransaction();
     res.status(500).json({ msg: 'Error while updating user', err });
   } finally {
-    session.endSession();
   }
 };
 
@@ -343,4 +331,4 @@ const updateUserVerification = async (req, res) => {
   return res.status(200).json({ msg: `The user verification was ${verified? 'given' : 'withdrawn'}` });
 }
 
-module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification, getUserByEmail};
+module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification, getUserByEmail,updateUserState};
