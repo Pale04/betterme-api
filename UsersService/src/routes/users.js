@@ -3,6 +3,7 @@ const router = express.Router();
 const { isAuthenticated } = require('../authentication/middleware');
 const {
   getUsers,
+  searchUsers,
   getUser,
   addUser,
   updateUser,
@@ -149,6 +150,47 @@ const {
  *         $ref: '#/components/responses/ServerError'
  */
 router.get('/', getUsers);
+
+/**
+ * @swagger
+ * /api/users/search:
+ *   get:
+ *     summary: Search users by username substring
+ *     description: 
+ *       Returns up to 10 users whose `account.username` contains the given query string (case-insensitive).
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Substring to match against usernames
+ *     responses:
+ *       '200':
+ *         description: A list of matching users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '400':
+ *         description: Missing or empty `q` parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: 'Query parameter "q" is required for searching'
+ *       '500':
+ *         $ref: '#/components/responses/ServerError'
+ *     security:
+ *       - BearerAuth: []
+ */
+
+router.get('/search', searchUsers);
 
 /**
  * @swagger
@@ -473,7 +515,7 @@ router.delete('/:id', deleteUser);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.patch('/:id/password', [isAuthenticated], changePassword);
+router.patch('/:id/password', changePassword);
 
 /**
  * @swagger
@@ -520,7 +562,7 @@ router.patch('/:id/password', [isAuthenticated], changePassword);
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.patch('/:id/email', [isAuthenticated], changeEmail);
+router.patch('/:id/email', changeEmail);
 
 /**
  * @swagger

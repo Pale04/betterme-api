@@ -17,6 +17,40 @@ const getUsers = async (req, res) => {
   }
 };
 
+
+// GET /api/users/search?q=<substring>
+const searchUsers = async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) {
+    return res
+      .status(400)
+      .json({ msg: 'Query parameter "q" is required for searching' });
+  }
+  try {
+    const accounts = await Account
+      .find({ username: { $regex: q, $options: 'i' } })
+      .limit(10)
+      .select('_id');
+
+    if (accounts.length === 0) {
+      return res.json([]);
+    }
+
+    const ids = accounts.map(a => a._id);
+    const users = await User
+      .find({ account: { $in: ids } })
+      .populate('account', '-password -__v')
+      .select('-__v');
+
+    return res.json(users);
+  } catch (err) {
+    console.error('Error searching users:', err);
+    return res
+      .status(500)
+      .json({ msg: 'Error while searching users', err });
+  }
+};
+
 // GET /api/users/:id
 const getUser = async (req, res) => {
   const { id } = req.params;
@@ -343,4 +377,4 @@ const updateUserVerification = async (req, res) => {
   return res.status(200).json({ msg: `The user verification was ${verified? 'given' : 'withdrawn'}` });
 }
 
-module.exports = {getUsers,getUser, getBannedUsers, addUser,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification, getUserByEmail};
+module.exports = {getUsers, searchUsers, getUser, getBannedUsers, addUser, updateUserState ,updateUser,deleteUser,changePassword,changeEmail, addModeratorUser, updateUserVerification, getUserByEmail};
