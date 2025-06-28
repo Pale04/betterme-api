@@ -155,7 +155,7 @@ services:
       internal:
         ipv4_address: 172.16.0.7
 
-  multimedia service:
+  multimedia_service:
     image: betterme/multimedia_service
     restart: always
     depends_on:
@@ -175,9 +175,11 @@ volumes:
     multimedia_documents:
     verification_documents:
     users_db_data:
-    auth_db_data:
     verification_db_data:
     email_db_data:
+    reports_db_data:
+    posts_db_data:
+    stats_db_data:
 
 networks:
   internal:
