@@ -128,7 +128,7 @@ services:
       - "6973:6973"
     environment:
       MONGO_URI: mongodb://stats_db:27017/betterme_stats_db
-  networks:
+    networks:
       internal:
         ipv4_address: 172.16.0.6
 

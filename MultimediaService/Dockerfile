@@ -7,7 +7,7 @@ run go mod download
 
 copy . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /multimedia-service
+RUN CGO_ENABLED=0 GOOS=linux go build -o multimedia-service .
 
 EXPOSE 6979
 
