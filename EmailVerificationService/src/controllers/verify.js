@@ -9,6 +9,7 @@ console.log('findOne →', typeof VerificationCode.findOne);      // should prin
 console.log('deleteMany →', typeof VerificationCode.deleteMany); //           : function
 const transporter          = require('../middleware/transporter');
 const axios                = require('axios');
+const existingUserVerificationCode = require('../models/existingUserVerificationCode');
 
 
 // POST /api/verify/initiate
@@ -95,14 +96,17 @@ const initiateVerificationExistent = async (req, res = response) => {
 // Body: { email, code }
 const confirmVerificationExistent = async (req, res = response) => {
     const { email, code } = req.body;
-
   try {
-    const record = await VerificationCode.findOneAndDelete({ email, code });
-    if (!record) {
+    const found = await ExistingUserVerificationCode.findOne({email,code});
+
+    if (!found) {
       return res.status(400).json({ msg: 'Código inválido o expirado' });
     }
+    else{
+      await ExistingUserVerificationCode.findOneAndDelete({ email, code });
+      res.status(200).json({ msg: 'Verificado correctamente' });
+    }
 
-    res.status(200).json({ msg: 'Verificado correctamente' });
   } catch (err) {
     console.error('verification.confirm error ➜', err.response?.data || err);
     const status = err.response?.status || 500;

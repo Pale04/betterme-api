@@ -177,7 +177,7 @@ router.post('/confirm', confirmVerification);
  */
 
 
-router.post('/exitent/initiate', initiateVerificationExistent);
+router.post('/existent/initiate', initiateVerificationExistent);
 
 
 /**
