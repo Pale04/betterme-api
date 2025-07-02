@@ -260,7 +260,7 @@ const changeEmail = async (req, res) => {
   const { id } = req.params;
   const { verificationCode, newEmail } = req.body;
 
-  const account = await Account.findOne({ account: id })
+  const account = await Account.findOne({ _id: id})
 
   const payload = {
     email: account.email,
@@ -277,30 +277,22 @@ const changeEmail = async (req, res) => {
     return;
   }
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const account = await Account.findByIdAndUpdate(
       id,
-      { newEmail },
-      { new: true, session },
+      { email: newEmail },
+      { new: true},
     );
 
     if (!account) {
-      await session.abortTransaction();
       return res.status(404).json({ msg: 'Account not found' });
     }
-
-    await session.commitTransaction();
 
     res.status(204).json({
       msg: `User ${id} updated`,
     });
   } catch (err) {
-    await session.abortTransaction();
     res.status(500).json({ msg: 'Error while updating user', err });
-  } finally {
-    session.endSession();
   }
 }
 

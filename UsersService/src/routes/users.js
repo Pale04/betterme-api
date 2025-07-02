@@ -377,7 +377,7 @@ router.put('/:id/state', updateUserState);
 
 /**
  * @swagger
- * /api/users/{id}:
+ * /api/users/edit/{id}:
  *   patch:
  *     summary: Update account & profile
  *     security:
