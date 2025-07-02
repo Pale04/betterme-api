@@ -92,7 +92,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("All");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -214,7 +214,8 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
     {
         try
         {
-            await postService.UpdatePostState(id, PostState.Published);
+            var report = await dbService.GetReport(id);
+            await postService.UpdatePostState(report!.PostId, PostState.Published);
         }
         catch (HttpRequestException error)
         {
@@ -229,7 +230,8 @@ app.MapPatch("/reports/{id}", async(string id, [FromBody] EvaluatedReport evalua
     {
         try
         {
-            await postService.UpdatePostState(id, PostState.Deleted);
+            var report = await dbService.GetReport(id);
+            await postService.UpdatePostState(report.PostId, PostState.Deleted);
         }
         catch (HttpRequestException error)
         {

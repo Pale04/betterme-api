@@ -7,6 +7,7 @@ import (
 	"MultimediaService/service/models"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 
 	"google.golang.org/grpc/codes"
@@ -66,21 +67,25 @@ func (s *server) GetUserProfileImage(user *pb.UserInfo, stream pb.MultimediaServ
 }
 
 func (s *server) CreatePost(ctx context.Context, post *pb.Post) (*pb.Post, error) {
-	//Aca faltaba como crear un objeto post por que no leia nada i no guardaba nada xdd
+	logger.ErrorString("Conectado")
+	fmt.Println("Usuario conectado alaverga")
 	m := models.Post{
-		Title:       post.GetTitle(),
-		Description: post.GetDescription(),
-		Category:    post.GetCategory(),
-		UserId:      post.GetUserId(),
-		TimeStamp:   post.GetTimeStamp().AsTime(),
-		Status:      post.GetStatus(),
+		Title:               post.GetTitle(),
+		Description:         post.GetDescription(),
+		Category:            post.GetCategory(),
+		UserId:              post.GetUserId(),
+		TimeStamp:           post.GetTimeStamp().AsTime(),
+		Status:              post.GetStatus(),
+		MultimediaExtension: post.GetMultimediaExtension(),
 	}
-
+	fmt.Println("POST CREADO")
 	if !m.IsValid() {
+		fmt.Println("POST INVALIDO")
 		return nil, status.Errorf(codes.InvalidArgument, "invalid post payload")
 	}
 
 	saved, err := da.WritePost(m)
+	fmt.Println("Post guardado")
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to write post: %v", err)
 	}

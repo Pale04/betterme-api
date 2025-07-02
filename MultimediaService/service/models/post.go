@@ -52,6 +52,6 @@ func (p *Post) IsValid() bool {
 		p.Description != "" &&
 		p.Category != "" &&
 		p.UserId != "" &&
-		p.TimeStamp.Before(time.Now()) &&
+		// p.TimeStamp.Before(time.Now()) &&
 		p.Status != ""
 }

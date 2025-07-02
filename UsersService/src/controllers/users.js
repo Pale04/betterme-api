@@ -60,6 +60,8 @@ const getUser = async (req, res) => {
       .populate('account', '-password -__v')
       .select('-__v');
 
+      console.log(id)
+
     if (!user) return res.status(404).json({ msg: 'User not found' });
     res.json(user);
   } catch (err) {
@@ -79,7 +81,7 @@ const getUserByEmail = async (req, res) => {
 
     if (!account) return res.status(404).json({ msg: 'Account not found' });
 
-    res.json(account);
+    res.status(200).json(account);
   } catch (err) {
     res.status(500).json({ msg: 'Error while obtaining user', err });
   }
@@ -336,21 +338,25 @@ const addModeratorUser = async (req, res) => {
 };
 
 const updateUserVerification = async (req, res) => {
+  console.log("0")
   const { id } = req.params;
   const { verified } = req.body;
-
+  console.log("1")
   if (verified === undefined) {
     return res.status(400).json({ msg: 'The verified parameter is required'})
   }
-
+  console.log("2")
   let user;
 
   try {
-	user = await User.findOneAndUpdate(
+  console.log("3")
+    user = await User.findOneAndUpdate(
 		{ account: id},
 		{ verified: verified },
 		{ new: true }
 	);
+
+    console.log("4")
   }
   catch (error) {
 	console.error('Error while attempting to update a user verification: ' + error);
