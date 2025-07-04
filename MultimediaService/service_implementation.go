@@ -159,23 +159,11 @@ func (s *server) UploadProfileImage(stream pb.MultimediaService_UploadProfileIma
 		}
 	}
 
-	err := da.WriteFile(da.FileData{
+	da.WriteFile(da.FileData{
 		Contents: buffer.Bytes(),
 		Name:     resourceId + "." + ext,
 		Source:   da.User,
 	})
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
-
-	err = da.SetImageRoute(resourceId, ext)
-
-	if err != nil {
-		logger.Error(err)
-		return err
-	}
 
 	return stream.SendAndClose(&pb.UserInfo{
 		Id: resourceId,
