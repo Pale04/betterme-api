@@ -268,7 +268,7 @@ const changeEmail = async (req, res) => {
   };
 
   const verifRes = await axios.post(
-    `${process.env.VERIFICATION_API}/api/verify/existent/confirm`,
+    `${process.env.EMAIL_API}/api/verify/existent/confirm`,
     payload
   );
 
